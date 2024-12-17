@@ -1,0 +1,279 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  CASHIER
+  STAFF
+  MANAGER
+}
+
+model User {
+  id           Int     @id @default(autoincrement())
+  email        String  @unique
+  password     String
+  refreshToken String?
+
+  role Role @default(STAFF)
+
+  profile Profile?
+
+  createAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+}
+
+enum WorkingStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Profile {
+  id       Int     @id @default(autoincrement())
+  name     String
+  phone    String
+  imageUrl String?
+
+  status WorkingStatus @default(ACTIVE)
+
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id])
+
+  createAt DateTime @default(now())
+
+  report Report[]
+  bill   Bill[]
+
+  updateAt DateTime @updatedAt
+}
+
+model Category {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  products Product[]
+
+  createAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+}
+
+model Product {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+  price       Int?
+  imageUrl    String?
+
+  categoryId Int
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  consignment Consignment[]
+
+  createAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+}
+
+model Supplier {
+  id          Int    @id @default(autoincrement())
+  name        String
+  address     String
+  phoneNumber String @unique
+  email       String @unique
+
+  consignment Consignment[]
+
+  createAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+}
+
+enum Type {
+  COLD
+  REGULAR
+}
+
+model Storage {
+  id       Int    @id @default(autoincrement())
+  name     String
+  location String
+  total    Int
+  type     Type   @default(REGULAR)
+
+  receipts Receipt[]
+  archive  Archive[]
+
+  createAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+}
+
+model Receipt {
+  id         Int @id @default(autoincrement())
+  total      Int
+  totalPrice Int
+
+  storageId Int
+  storage   Storage @relation(fields: [storageId], references: [id])
+
+  consignment Consignment[]
+
+  createAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+}
+
+model Consignment {
+  id Int @id @default(autoincrement())
+
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+
+  supplierId Int
+  supplier   Supplier @relation(fields: [supplierId], references: [id])
+
+  receiptId Int
+  receipt   Receipt? @relation(fields: [receiptId], references: [id])
+
+  archive Archive?
+
+  quantity Int
+  price    Int
+  expired  DateTime
+
+  createAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+}
+
+model Archive {
+  id Int @id @default(autoincrement())
+
+  consignmentId Int         @unique
+  consignment   Consignment @relation(fields: [consignmentId], references: [id])
+
+  storageId Int
+  storage   Storage @relation(fields: [storageId], references: [id])
+
+  quantity Int
+
+  discount     Discount?
+  billDetail   BillDetail[]
+  reportDetail ReportDetail[]
+
+  createAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+}
+
+enum Decision {
+  DISCOUNT
+  DESTROY
+  NO_ACTION
+}
+
+model Report {
+  id Int @id @default(autoincrement())
+
+  employeeId Int
+  employee   Profile @relation(fields: [employeeId], references: [id])
+
+  reportDetail ReportDetail[]
+
+  createAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+}
+
+model ReportDetail {
+  id Int @id @default(autoincrement())
+
+  reportId Int
+  report   Report @relation(fields: [reportId], references: [id])
+
+  archiveId Int
+  archive   Archive @relation(fields: [archiveId], references: [id])
+
+  quantity Int
+
+  decision Decision
+  discount Discount?
+
+  createAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+}
+
+model Discount {
+  id Int @id @default(autoincrement())
+
+  archiveId Int     @unique
+  archive   Archive @relation(fields: [archiveId], references: [id])
+
+  reportDetailId Int          @unique
+  reportDetail   ReportDetail @relation(fields: [reportDetailId], references: [id])
+
+  value Int @default(0)
+
+  createAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+}
+
+model Customer {
+  id          Int    @id @default(autoincrement())
+  name        String
+  phoneNumber String @unique
+  point       Int    @default(0)
+
+  bill Bill[]
+
+  createAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+}
+
+enum Status {
+  PENDING
+  SUCCESS
+  CANCEL
+}
+
+enum PaymentMethod {
+  CASH
+  MOBILE_BANKING
+  CREDIT_CARD
+}
+
+model Bill {
+  id Int @id @default(autoincrement())
+
+  employeeId Int
+  employee   Profile @relation(fields: [employeeId], references: [id])
+
+  customerId Int?
+  customer   Customer? @relation(fields: [customerId], references: [id])
+
+  total Int
+
+  paid          Int?
+  change        Int?
+  paymentMethod PaymentMethod @default(CASH)
+  status        Status        @default(PENDING)
+
+  billDetail BillDetail[]
+
+  createAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+}
+
+model BillDetail {
+  id Int @id @default(autoincrement())
+
+  billId Int
+  bill   Bill @relation(fields: [billId], references: [id])
+
+  archiveId Int
+  archive   Archive @relation(fields: [archiveId], references: [id])
+
+  quantity Int
+  price    Int
+
+  createAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+}
