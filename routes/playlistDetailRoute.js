@@ -10,6 +10,6 @@ router.get('/', getPlaylistDetail);
 router.patch('/', addSongToPlaylist);
 
 //
-router.patch('/', deleteSongFromPlaylist);
+router.delete('/', deleteSongFromPlaylist);
 
 module.exports=router;

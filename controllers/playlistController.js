@@ -1,3 +1,4 @@
+const { doc } = require('@firebase/firestore');
 const {db, admin}=require('../firebase')
 //
 const getPlaylist= async (req, res)=>{
@@ -15,7 +16,7 @@ const getPlaylist= async (req, res)=>{
                 createdAt: data.createdAt
                     ? new Date(data.createdAt._seconds * 1000) // Chuyển đổi từ _seconds sang Date
                     : null,
-                countSongs: data.songIds
+                countSongs: data.songIds.length
             }
         })
         
@@ -65,7 +66,7 @@ const addPlaylist= async (req, res)=>{
             createdAt: admin.firestore.FieldValue.serverTimestamp()
         });
         res.status(201).json({
-            message: "Success."
+            message: "Success.",
         });
     } catch (error) {
         res.status(400).json({
