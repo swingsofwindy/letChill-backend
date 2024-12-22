@@ -33,7 +33,7 @@ const getInformation=async(req,res)=>{
             releaseDate: song.releasedate,
             genre: firebaseDoc.data.tags || [], // Lấy thể loại từ tags của Jamendo (nếu có)
             composer: firebaseDoc.data.composer || "", // Giá trị mặc định là rỗng
-            lyric: firebaseDoc.data.lyric || "", // Giá trị mặc định là rỗng
+            lyric: firebaseDoc.data.lyric || [], // Giá trị mặc định là rỗng
             play: firebaseDoc.data.play || 0, // Giá trị mặc định là 0 
           }
           res.status(201).json(enhancedSong)

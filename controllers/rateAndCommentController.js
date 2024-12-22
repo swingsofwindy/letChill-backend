@@ -38,7 +38,7 @@ const addRate=async(req, res)=>{
         await db.collection('rac').doc().set({
             songId: songId,
             creatorId:uid,
-            rate: rate,
+            rate: rate||'0',
             comment: comment
         });
         res.status(201).json({

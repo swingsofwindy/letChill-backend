@@ -1,5 +1,5 @@
 require('dotenv').config()
-
+const cors=require('cors')
 const express=require('express')
 const userRoute=require('./routes/userRoute')
 const profileRoute=require('./routes/profileRoute')
@@ -14,30 +14,9 @@ const { indexSongsToMeilisearch } = require('./songData'); // Import các hàm
 
 const app=express()
 
-const db = require('./firebase');
-// Chạy fetchSongs để thêm dữ liệu vào Meilisearch
-
-app.get("/addData", async (req, res) => {
-  try {
-    const data = {
-      name: 'Nguyen Van A',
-      birth:"10/10/2004",
-      gender: "male",
-      email: 'abc@gmail.com',
-      password:'***'
-    };    
-    console.log(data)
-    await db.collection("users").add(data);
-    res.status(200).send("Data added successfully!");
-    console.log('Data added successfully!')
-  } catch (error) {
-    console.error("Error adding data:", error);
-    res.status(500).send("Error adding data");
-  }
-});
-
 //middleware
 app.use(express.json());
+app.use(cors());
 
 app.get('/api',(req,res)=>{
     res.json({mssg:'Pikachu'})
