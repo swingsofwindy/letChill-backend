@@ -10,17 +10,14 @@ const playlistDetailRoute=require('./routes/playlistDetailRoute')
 const lyricsRoute=require('./routes/lyricsRoute')
 const songInformationRoute=require('./routes/songInformationRoute')
 const searchSongRoute=require('./routes/searchSongRoute')
-const { indexSongsToMeilisearch } = require('./songData'); // Import các hàm
+const dashboardRoute=require('./routes/dashboardRoute')
 
+const {deleteAllDocuments}=require('./songData')
 const app=express()
-
+//deleteAllDocuments()
 //middleware
 app.use(express.json());
 app.use(cors());
-
-app.get('/api',(req,res)=>{
-    res.json({mssg:'Pikachu'})
-})
 
 app.use('/api/user', userRoute)
 app.use('/api/profile', profileRoute)
@@ -31,6 +28,7 @@ app.use('/api/playlistDetail',playlistDetailRoute)
 app.use('/api/lyrics', lyricsRoute)
 app.use('/api/songInformation', songInformationRoute)
 app.use('/api/search', searchSongRoute)
+app.use('/api', dashboardRoute)
 
 app.listen(process.env.PORT, ()=>{
     console.log('Listen on port', process.env.PORT)
