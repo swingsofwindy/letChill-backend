@@ -43,7 +43,7 @@ async function getSongFromJamendo(songId) {
         shorturl: artist.shorturl || "",
         proImage: artist.pro_image || "",
         musicLinks: artist.musiclinks || [],
-        followers: artistDoc.data.followers, // Số người theo dõi từ Firebase
+        followers: artistDoc.data().followers, // Số người theo dõi từ Firebase
         };
       return artistInfo;
     } catch (error) {

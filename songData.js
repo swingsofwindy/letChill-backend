@@ -51,7 +51,7 @@ async function searchInJamendo(query) {
         if (!firebaseDoc.exists) {
           await db.collection('song').doc(songId).set({
             name: song.name,
-            tag:[],
+            tags:[],
             composer: "",
             lyric: [],
             play: 0,
@@ -127,7 +127,7 @@ async function searchJamendo(query) {
         if (!firebaseDoc.exists) {
           await db.collection('song').doc(songId).set({
             name: song.name,
-            tag:[],
+            tags:[],
             composer: "",
             lyric: [],
             play: 0,
@@ -142,10 +142,10 @@ async function searchJamendo(query) {
           audio: song.audio,
           image: song.album_image,
           releaseDate: song.releasedate,
-          genre: firebaseDoc.data.tags || [], // Lấy thể loại từ tags của Jamendo (nếu có)
-          composer: firebaseDoc.data.composer || "", // Giá trị mặc định là rỗng
-          lyric: firebaseDoc.data.lyric || [], // Giá trị mặc định là rỗng
-          play: firebaseDoc.data.play || 0, // Giá trị mặc định là 0
+          genre: firebaseDoc.data().tags || [], // Lấy thể loại từ tags của Jamendo (nếu có)
+          composer: firebaseDoc.data().composer || "", // Giá trị mặc định là rỗng
+          lyric: firebaseDoc.data().lyric || [], // Giá trị mặc định là rỗng
+          play: firebaseDoc.data().play || 0, // Giá trị mặc định là 0
         };
 
         return enhancedSong;

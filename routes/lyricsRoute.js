@@ -1,9 +1,11 @@
 const express=require('express');
-const {getLyrics}=require('../controllers/lyricsController');
+const {getLyrics, addLyrics}=require('../controllers/lyricsController');
 
 const router=express.Router();
 
 //
 router.get('/', getLyrics);
 
+//
+router.patch('/', addLyrics)
 module.exports=router;
