@@ -1,6 +1,5 @@
 const {db, admin}=require('../firebase')
 const axios=require('axios');
-const { search } = require('../routes/lyricsRoute');
 //
 const getInformation=async(req,res)=>{
     const {songId}=req.body;
