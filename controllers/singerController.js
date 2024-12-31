@@ -28,7 +28,7 @@ const getSinger=async(req,res)=>{
         shorturl: artist.shorturl || "",
         proImage: artist.pro_image || "",
         musicLinks: artist.musiclinks || [],
-        followers: artistDoc.data.followers||0, // Số người theo dõi từ Firebase
+        followers: artistDoc.data().followers||0, // Số người theo dõi từ Firebase
         };
         res.status(200).json(artistInfo)
     }
