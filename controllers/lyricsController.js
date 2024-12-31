@@ -18,4 +18,28 @@ const getLyrics=async (req,res)=>{
     }
 }
 
-module.exports={getLyrics}
+const addLyrics=async (req,res)=>{
+    const {songName, newLyric}=req.body;
+    try {
+        const querySnapshot=await db.collection('song').where('name','==',songName).get();
+        if(querySnapshot.empty)
+        {
+            res.status(404).json({
+                message:'No song found.',
+                error:error.message
+            })
+        }
+        querySnapshot.forEach(async(doc)=>{
+            await doc.ref.update({ lyric:newLyric});
+        });
+        res.status(201).json({
+            message:'All lyrics are updated.'
+        })
+    } catch (error) {
+        res.status(400).json({
+            message:'Error updating lyrics.',
+            error:error.message
+        })
+    }
+}
+module.exports={getLyrics, addLyrics}

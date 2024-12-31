@@ -63,7 +63,8 @@ const addPlaylist= async (req, res)=>{
             avtUrl: avtUrl,
             description: description,
             songIds:[],
-            createdAt: admin.firestore.FieldValue.serverTimestamp()
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            lastPlayed: admin.firestore.FieldValue.serverTimestamp()
         });
         res.status(201).json({
             message: "Success.",
