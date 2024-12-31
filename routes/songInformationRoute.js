@@ -5,6 +5,6 @@ const router=express.Router();
 
 //
 router.get('/', getInformation);
-router.post('/', addSong);
+//router.post('/', addSong);
 
 module.exports=router;
