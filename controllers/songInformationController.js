@@ -29,7 +29,7 @@ const getInformation=async(req,res)=>{
             name: song.name,
             artist: song.artist_name,
             audio: song.audio,
-            image: song.album_image,
+            image: song.image,
             releaseDate: song.releasedate,
             genre: firebaseDoc.data.tags || [], // Lấy thể loại từ tags của Jamendo (nếu có)
             composer: firebaseDoc.data.composer || "", // Giá trị mặc định là rỗng
