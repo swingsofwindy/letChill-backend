@@ -16,6 +16,7 @@ const getSinger=async(req,res)=>{
         if (!artistDoc.exists) {
             await db.collection('song').doc(artistId).set({
                 artistId: artistId,
+                artistName: artist.name,
                 followers : 0
             });
           }

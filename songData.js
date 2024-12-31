@@ -7,22 +7,6 @@ const CLIENT_ID=process.env.CLIENT_ID;
 const meiliClient = new MeiliSearch({ host: 'http://127.0.0.1:7700' }); // Thay bằng URL Meilisearch của bạn
 const meiliIndex = meiliClient.index('songs'); // Tên index bạn muốn tạo cho bài hát
 
-// // Lấy danh sách bài hát từ Firebase và lập chỉ mục vào Meilisearch
-// async function indexSongsToMeilisearch() {
-//   try {
-//     const snapshot = await db.collection('song').get();
-//     const songs = snapshot.docs.map(doc => ({
-//       id: doc.id,
-//       ...doc.data()
-//     }));
-
-//     // Tạo chỉ mục trong Meilisearch (nếu chưa có)
-//     const response=await meiliIndex.addDocuments(songs);
-
-//   } catch (error) {
-//     console.error('Error indexing songs to Meilisearch:', error);
-//   }
-// }
 async function searchInMeilisearch(query) {
   try {
 

@@ -70,6 +70,3 @@ node_modules/
 
 #.serviceAccountKey.json
 serviceAccountKey.json
-
-#cloudinaryConfig.js
-cloudinaryConfig.js

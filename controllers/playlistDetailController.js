@@ -11,7 +11,7 @@ const getPlaylistDetail=async (req,res)=>{
         if (!playlistDoc.exists) {
           return res.status(404).json({ message: 'Playlist not found' });
         }
-    
+        
         const playlistData = playlistDoc.data();
         const songIds = playlistData.songIds || []; // Danh sách songId từ playlist
     
@@ -64,7 +64,9 @@ const getPlaylistDetail=async (req,res)=>{
           description: playlistData.description || '',
           songs: validSongs, // Danh sách bài hát
         };
-    
+        await db.collection('playlist').doc(playlistId).update({
+          lastPlayed: admin.firestore.FieldValue.serverTimestamp()
+      });
         res.status(200).json(responseData);
       } catch (error) {
         console.error('Error fetching playlist details:', error);
