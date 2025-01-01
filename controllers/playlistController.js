@@ -34,7 +34,8 @@ const getPlaylist= async (req, res)=>{
 
 //
 const updatePlaylist= async (req, res)=>{
-    const {playlistId, name, avtUrl, description}=req.body;
+    const playlistId=req.params.id;
+    const {name, avtUrl, description}=req.body;
     try {
         const playlistRef=db.collection('playlist').doc(playlistId);
         await playlistRef.update({
@@ -78,7 +79,7 @@ const addPlaylist= async (req, res)=>{
 }
 
 const deletePlaylist= async (req, res)=>{
-    const {playlistId}=req.body;
+    const playlistId=req.params.id;
     try {
         await db.collection('playlist').doc(playlistId).delete();
         res.status(201).json({message: "Success."});

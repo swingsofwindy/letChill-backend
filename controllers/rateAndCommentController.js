@@ -1,7 +1,7 @@
 const {db}=require('../firebase')
 //GET rate va comment
 const getRate=async(req, res)=>{
-    const {songId}=req.body;
+    const songId=req.params.id;
     try {
         const racSnapshot=await db.collection('rac').where('songId','==',songId).get();
         const racCount=racSnapshot.size;
@@ -33,7 +33,8 @@ const getRate=async(req, res)=>{
 
 //CREATE rate va comment
 const addRate=async(req, res)=>{
-    const{songId,uid,rate, comment}=req.body;
+    const songId=req.params.id;
+    const{uid,rate, comment}=req.body;
     try {
         await db.collection('rac').doc().set({
             songId: songId,

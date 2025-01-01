@@ -4,12 +4,12 @@ const { getPlaylistDetail, addSongToPlaylist, deleteSongFromPlaylist}=require('.
 const router=express.Router();
 
 //
-router.get('/', getPlaylistDetail);
+router.get('/:id', getPlaylistDetail);
 
 //
-router.patch('/', addSongToPlaylist);
+router.patch('/:id', addSongToPlaylist);
 
 //
-router.delete('/', deleteSongFromPlaylist);
+router.delete('/:id', deleteSongFromPlaylist);
 
 module.exports=router;

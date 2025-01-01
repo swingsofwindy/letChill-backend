@@ -2,7 +2,7 @@ const {db, admin}=require('../firebase')
 const axios=require('axios');
 //
 const getInformation=async(req,res)=>{
-    const {songId}=req.body;
+    const songId=req.params.id;
     try {
         const response = await axios.get("https://api.jamendo.com/v3.0/tracks", {
             params: {

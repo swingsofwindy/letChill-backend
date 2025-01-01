@@ -2,7 +2,7 @@ const {db}=require('../firebase')
 
 //GET profile
 const getProfile= async (req, res)=>{
-    const {uid}=req.body;
+    const uid=req.params.id;
     try{
         const userDoc=await db.collection('users').doc(uid).get();
         if(!userDoc.exists)

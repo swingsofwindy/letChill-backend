@@ -4,9 +4,9 @@ const {getRate, addRate}=require('../controllers/rateAndCommentController');
 const router=express.Router();
 
 //GET rate va comment
-router.get('/', getRate);
+router.get('/:id', getRate);
 
 //CREATE rate va comment
-router.post('/', addRate);
+router.post('/:id', addRate);
 
 module.exports=router;

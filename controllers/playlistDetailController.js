@@ -3,8 +3,8 @@ const axios=require('axios');
 
 //
 const getPlaylistDetail=async (req,res)=>{
-    const {playlistId}=req.body;
-    try {
+  const playlistId=req.params.id;
+  try {
         // Lấy thông tin danh sách phát từ Firebase
         const playlistDoc = await db.collection('playlist').doc(playlistId).get();
     
@@ -76,7 +76,8 @@ const getPlaylistDetail=async (req,res)=>{
 
 //
 const addSongToPlaylist= async (req, res)=>{
-    const {playlistId, songId}=req.body;
+  const playlistId=req.params.id;
+  const {songId}=req.body;
     try {
         await db.collection('playlist').doc(playlistId).update({
             songIds: admin.firestore.FieldValue.arrayUnion(songId)
@@ -93,7 +94,8 @@ const addSongToPlaylist= async (req, res)=>{
 }
 
 const deleteSongFromPlaylist= async (req, res)=>{
-    const {playlistId, songId}=req.body;
+  const playlistId=req.params.id;
+  const {songId}=req.body;
     
     try {
         await db.collection('playlist').doc(playlistId).update({

@@ -4,7 +4,7 @@ const {getLyrics, addLyrics}=require('../controllers/lyricsController');
 const router=express.Router();
 
 //
-router.get('/', getLyrics);
+router.get('/:id', getLyrics);
 
 //
 router.patch('/', addLyrics)

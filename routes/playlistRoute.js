@@ -10,9 +10,9 @@ router.get('/', getPlaylist);
 router.post('/', addPlaylist);
 
 //
-router.patch('/', updatePlaylist);
+router.patch('/:id', updatePlaylist);
 
 //
-router.delete('/', deletePlaylist);
+router.delete('/:id', deletePlaylist);
 
 module.exports=router;
