@@ -8,6 +8,6 @@ router.get('/:id', getInformation);
 //router.post('/', addSong);
 
 // Thêm route trong router
-router.get('/random-id', getRandomSongId);
+router.get('/', getRandomSongId);
 
 module.exports = router;

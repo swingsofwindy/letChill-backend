@@ -46,14 +46,15 @@ const getInformation = async (req, res) => {
 }
 
 const getRandomSongId = async (req, res) => {
+  console.log('randomSongId');
   try {
-    const songsCollection = db.collection('song');  // Chú ý: Sử dụng db.collection thay vì collection(db, 'songs')
-    const songSnapshot = await songsCollection.get();
+    const songSnapshot = await db.collection('song').get();  // Chú ý: Sử dụng db.collection thay vì collection(db, 'songs')
     const songList = songSnapshot.docs.map(doc => doc.id); // Lấy tất cả ID bài hát
 
     if (songList.length > 0) {
       const randomIndex = Math.floor(Math.random() * songList.length);
       const randomSongId = songList[randomIndex];
+      console.log(randomSongId);
       res.json({ id: randomSongId });
     } else {
       res.status(404).send('No songs found');
