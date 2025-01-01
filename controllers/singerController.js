@@ -2,7 +2,7 @@ const {admin, db}=require('../firebase')
 const axios=require('axios')
 //GET thong tin nghe si
 const getSinger=async(req,res)=>{
-    const {artistId}=req.body;
+    const artistId=req.params.id;
     try{
         const response = await axios.get("https://api.jamendo.com/v3.0/artists", {
             params: {

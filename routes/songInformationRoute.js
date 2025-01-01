@@ -4,7 +4,7 @@ const {getInformation, addSong}=require('../controllers/songInformationControlle
 const router=express.Router();
 
 //
-router.get('/', getInformation);
+router.get('/:id', getInformation);
 //router.post('/', addSong);
 
 module.exports=router;

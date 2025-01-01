@@ -4,7 +4,7 @@ const {getSinger, createSinger}=require('../controllers/singerController');
 const router=express.Router();
 
 //GET thong tin nghe si
-router.get('/', getSinger);
+router.get('/:id', getSinger);
 
 //
 router.post('/',createSinger);

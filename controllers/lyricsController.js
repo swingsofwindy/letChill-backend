@@ -2,7 +2,7 @@ const { db } = require("../firebase");
 
 //
 const getLyrics=async (req,res)=>{
-    const {songId}=req.body;
+    const songId=req.params.id;
     try {
         const firebaseDoc = await db.collection('song').doc(songId).get();
         //console.log(firebaseDoc.data())
