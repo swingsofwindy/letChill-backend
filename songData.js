@@ -47,16 +47,16 @@ async function searchInJamendo(query) {
         const songId = song.id;
 
         // Kiểm tra thông tin trong Firebase
-        const firebaseDoc = await db.collection('song').doc(songId).get();
-        if (!firebaseDoc.exists) {
-          await db.collection('song').doc(songId).set({
-            name: song.name,
-            tags:[],
-            composer: "",
-            lyric: [],
-            play: 0,
-          });
-        }
+        // const firebaseDoc = await db.collection('song').doc(songId).get();
+        // if (!firebaseDoc.exists) {
+        //   await db.collection('song').doc(songId).set({
+        //     name: song.name,
+        //     tags:[],
+        //     composer: "",
+        //     lyric: [],
+        //     play: 0,
+        //   });
+        // }
         // Bổ sung thông tin mặc định nếu Firebase không có
         const enhancedSong = {
           id: songId,
@@ -66,10 +66,14 @@ async function searchInJamendo(query) {
           audio: song.audio,
           image: song.album_image,
           releaseDate: song.releasedate,
-          genre: firebaseDoc.data.tags || [], // Lấy thể loại từ tags của Jamendo (nếu có)
-          composer: firebaseDoc.data.composer || "", // Giá trị mặc định là rỗng
-          lyric: firebaseDoc.data.lyric || [], // Giá trị mặc định là rỗng
-          play: firebaseDoc.data.play || 0, // Giá trị mặc định là 0
+          // genre: firebaseDoc.data.tags || [], // Lấy thể loại từ tags của Jamendo (nếu có)
+          // composer: firebaseDoc.data.composer || "", // Giá trị mặc định là rỗng
+          // lyric: firebaseDoc.data.lyric || [], // Giá trị mặc định là rỗng
+          // play: firebaseDoc.data.play || 0, // Giá trị mặc định là 0
+          genre:  [], // Lấy thể loại từ tags của Jamendo (nếu có)
+          composer:  "", // Giá trị mặc định là rỗng
+          lyric: [], // Giá trị mặc định là rỗng
+          play:  0, // Giá trị mặc định là 0
         };
 
         return enhancedSong;
@@ -123,16 +127,16 @@ async function searchJamendo(query) {
         const songId = song.id;
 
         // Kiểm tra thông tin trong Firebase
-        const firebaseDoc = await db.collection('song').doc(songId).get();
-        if (!firebaseDoc.exists) {
-          await db.collection('song').doc(songId).set({
-            name: song.name,
-            tags:[],
-            composer: "",
-            lyric: [],
-            play: 0,
-          });
-        }
+        // const firebaseDoc = await db.collection('song').doc(songId).get();
+        // if (!firebaseDoc.exists) {
+        //   await db.collection('song').doc(songId).set({
+        //     name: song.name,
+        //     tags:[],
+        //     composer: "",
+        //     lyric: [],
+        //     play: 0,
+        //   });
+        // }
         // Bổ sung thông tin mặc định nếu Firebase không có
         const enhancedSong = {
           id: songId,
@@ -142,10 +146,14 @@ async function searchJamendo(query) {
           audio: song.audio,
           image: song.album_image,
           releaseDate: song.releasedate,
-          genre: firebaseDoc.data().tags || [], // Lấy thể loại từ tags của Jamendo (nếu có)
-          composer: firebaseDoc.data().composer || "", // Giá trị mặc định là rỗng
-          lyric: firebaseDoc.data().lyric || [], // Giá trị mặc định là rỗng
-          play: firebaseDoc.data().play || 0, // Giá trị mặc định là 0
+          // genre: firebaseDoc.data().tags || [], // Lấy thể loại từ tags của Jamendo (nếu có)
+          // composer: firebaseDoc.data().composer || "", // Giá trị mặc định là rỗng
+          // lyric: firebaseDoc.data().lyric || [], // Giá trị mặc định là rỗng
+          // play: firebaseDoc.data().play || 0, // Giá trị mặc định là 0
+          genre: [], // Lấy thể loại từ tags của Jamendo (nếu có)
+          composer: "", // Giá trị mặc định là rỗng
+          lyric: [], // Giá trị mặc định là rỗng
+          play:  0, // Giá trị mặc định là 0
         };
 
         return enhancedSong;

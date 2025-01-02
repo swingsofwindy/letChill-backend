@@ -12,14 +12,14 @@ const getSinger=async(req,res)=>{
             },
           });
         const artist = response.data.results[0]; 
-        const artistDoc = await db.collection("singers").doc(artistId).get();
-        if (!artistDoc.exists) {
-            await db.collection('singers').doc(artistId).set({
-                artistId: artistId,
-                artistName: artist.name,
-                followers : 0
-            });
-          }
+        // const artistDoc = await db.collection("singers").doc(artistId).get();
+        // if (!artistDoc.exists) {
+        //     await db.collection('singers').doc(artistId).set({
+        //         artistId: artistId,
+        //         artistName: artist.name,
+        //         followers : 0
+        //     });
+        //   }
         const artistInfo = {
         id: artist.id,
         name: artist.name || "Unknown Artist",
@@ -28,7 +28,8 @@ const getSinger=async(req,res)=>{
         shorturl: artist.shorturl || "",
         proImage: artist.pro_image || "",
         musicLinks: artist.musiclinks || [],
-        followers: artistDoc.data().followers||0, // Số người theo dõi từ Firebase
+        //followers: artistDoc.data().followers||0, // Số người theo dõi từ Firebase
+        followers:0
         };
         res.status(200).json(artistInfo)
     }

@@ -13,16 +13,16 @@ const getInformation = async (req, res) => {
       },
     });
     const song = response.data.results[0];
-    const firebaseDoc = await db.collection('song').doc(songId).get();
-    if (!firebaseDoc.exists) {
-      await db.collection('song').doc(songId).set({
-        name: song.name,
-        tags: [],
-        composer: "",
-        lyric: [],
-        play: 0,
-      });
-    }
+    // const firebaseDoc = await db.collection('song').doc(songId).get();
+    // if (!firebaseDoc.exists) {
+    //   await db.collection('song').doc(songId).set({
+    //     name: song.name,
+    //     tags: [],
+    //     composer: "",
+    //     lyric: [],
+    //     play: 0,
+    //   });
+    // }
     const enhancedSong = {
       id: songId,
       name: song.name,
@@ -30,10 +30,15 @@ const getInformation = async (req, res) => {
       audio: song.audio,
       image: song.image,
       releaseDate: song.releasedate,
-      genre: firebaseDoc.data().tags || [], // Lấy thể loại từ tags của Jamendo (nếu có)
-      composer: firebaseDoc.data().composer || "", // Giá trị mặc định là rỗng
-      lyric: firebaseDoc.data().lyric, // Giá trị mặc định là rỗng
-      play: firebaseDoc.data().play || 0, // Giá trị mặc định là 0 
+      duration: song.duration,
+      // genre: firebaseDoc.data().tags || [], // Lấy thể loại từ tags của Jamendo (nếu có)
+      // composer: firebaseDoc.data().composer || "", // Giá trị mặc định là rỗng
+      // lyric: firebaseDoc.data().lyric||[], // Giá trị mặc định là rỗng
+      // play: firebaseDoc.data().play || 0, // Giá trị mặc định là 0 
+      genre:  [], // Lấy thể loại từ tags của Jamendo (nếu có)
+      composer: "", // Giá trị mặc định là rỗng
+      lyric: [], // Giá trị mặc định là rỗng
+      play: 0, // Giá trị mặc định là 0 
     }
     res.status(201).json(enhancedSong)
 
@@ -48,12 +53,22 @@ const getInformation = async (req, res) => {
 const getRandomSongId = async (req, res) => {
   console.log('randomSongId');
   try {
-    const songSnapshot = await db.collection('song').get();  // Chú ý: Sử dụng db.collection thay vì collection(db, 'songs')
-    const songList = songSnapshot.docs.map(doc => doc.id); // Lấy tất cả ID bài hát
+    // const songSnapshot = await db.collection('song').get();  // Chú ý: Sử dụng db.collection thay vì collection(db, 'songs')
+    // const songList = songSnapshot.docs.map(doc => doc.id); // Lấy tất cả ID bài hát
+    
+    const response = await axios.get('https://api.jamendo.com/v3.0/tracks', {
+      params: {
+          client_id: process.env.CLIENT_ID,
+          limit: 10 // Lấy tối đa 200 bài hát
+      }
+  });
 
-    if (songList.length > 0) {
-      const randomIndex = Math.floor(Math.random() * songList.length);
-      const randomSongId = songList[randomIndex];
+  // Lấy danh sách các bài hát
+  const tracks = response.data.results;
+
+    if (tracks.length > 0) {
+      const randomIndex = Math.floor(Math.random() * tracks.length);
+      const randomSongId = tracks[randomIndex].id;
       console.log(randomSongId);
       res.json({ id: randomSongId });
     } else {
