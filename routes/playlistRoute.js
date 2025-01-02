@@ -1,7 +1,7 @@
-const express=require('express');
-const { getPlaylist, updatePlaylist, addPlaylist, deletePlaylist}=require('../controllers/playlistController');
+const express = require('express');
+const { getPlaylist, updatePlaylist, addPlaylist, deletePlaylist } = require('../controllers/playlistController');
 
-const router=express.Router();
+const router = express.Router();
 
 //
 router.get('/', getPlaylist);
@@ -15,4 +15,4 @@ router.patch('/:id', updatePlaylist);
 //
 router.delete('/:id', deletePlaylist);
 
-module.exports=router;
+module.exports = router;
