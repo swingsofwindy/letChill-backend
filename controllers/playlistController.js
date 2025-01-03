@@ -30,7 +30,6 @@ const getPlaylist = async (req, res) => {
             "name":"Chill",
             "avtUrl":"https://basicns.com/images/Dap%20noi%20ban%20sat%20di%20hoc%20long%20banner.jpg",
             "description":"Chill đi.",
-            "createdAt":"01/01/2025",
             "countSongs":0
         },
         {
@@ -39,7 +38,6 @@ const getPlaylist = async (req, res) => {
             "name":"Chill",
             "avtUrl":"https://basicns.com/images/Dap%20noi%20ban%20sat%20di%20hoc%20long%20banner.jpg",
             "description":"Chill đi.",
-            "createdAt":"01/01/2025",
             "countSongs":0
         }
     ]
