@@ -173,10 +173,36 @@ async function deleteAllDocuments() {
   console.log(`All documents in index song have been deleted.`);
 }
 
+async function RandomSongId() {
+  try {
+    const index = meiliClient.index('songs'); // Tên index chứa dữ liệu bài hát
+
+    // Lấy toàn bộ danh sách bài hát (chỉ lấy trường ID)
+    const result = await index.getDocuments({ fields: ['id'], limit: 50 }); // Thay đổi limit nếu cần
+
+    if (result.results.length === 0) {
+      console.log('Không có bài hát nào trong Meilisearch.');
+      return null;
+    }
+
+    // Chọn ngẫu nhiên 1 ID
+    const randomIndex = Math.floor(Math.random() * result.results.length);
+    const randomSongId = result.results[randomIndex].id;
+
+    console.log(`Random Song ID: ${randomSongId}`);
+    return randomSongId;
+  } catch (error) {
+    console.error('Lỗi khi lấy dữ liệu từ Meilisearch:', error);
+    return null;
+  }
+}
+
+
 module.exports={
   searchInMeilisearch,
   searchInJamendo,
   searchMeilisearch,
   searchJamendo,
-  deleteAllDocuments
+  deleteAllDocuments,
+  RandomSongId
 }
