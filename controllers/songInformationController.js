@@ -1,5 +1,6 @@
 const { db, admin } = require('../firebase')
 const axios = require('axios');
+const {RandomSongId}=require('../songData')
 //
 const getInformation = async (req, res) => {
   const songId = req.params.id;
@@ -53,27 +54,11 @@ const getInformation = async (req, res) => {
 const getRandomSongId = async (req, res) => {
   console.log('randomSongId');
   try {
-    // const songSnapshot = await db.collection('song').get();  // Chú ý: Sử dụng db.collection thay vì collection(db, 'songs')
-    // const songList = songSnapshot.docs.map(doc => doc.id); // Lấy tất cả ID bài hát
-    
-    const response = await axios.get('https://api.jamendo.com/v3.0/tracks', {
-      params: {
-          client_id: process.env.CLIENT_ID,
-          limit: 10 // Lấy tối đa 200 bài hát
-      }
-  });
-
-  // Lấy danh sách các bài hát
-  const tracks = response.data.results;
-
-    if (tracks.length > 0) {
-      const randomIndex = Math.floor(Math.random() * tracks.length);
-      const randomSongId = tracks[randomIndex].id;
-      console.log(randomSongId);
-      res.json({ id: randomSongId });
-    } else {
-      res.status(404).send('No songs found');
-    }
+   const randomSongId= await RandomSongId();
+   if(!randomSongId)
+    res.status(404).json('Không tìm thấy.')
+  else
+  res.status(201).json({id:randomSongId});
   } catch (error) {
     console.error('Error fetching random song:', error);
     res.status(500).send('Server Error');
