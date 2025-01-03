@@ -54,14 +54,14 @@ async function getSongFromJamendo(songId) {
 
 const getDashboard= async (req,res)=>{
     try {
-        const songsQuery=await db.collection('song').orderBy('play','desc').limit(6).get();
+        const songsQuery=await db.collection('song').orderBy('play','desc').limit(5).get();
         const topSongs=[];
         for (const doc of songsQuery.docs) {
             const jamendoData = await getSongFromJamendo(doc.data.songId);
             topSongs.push(jamendoData);
         }
         // Lấy top 10 ca sĩ có follower cao nhất
-        const singersQuery = await db.collection('singers').orderBy('followers', 'desc').limit(10).get();
+        const singersQuery = await db.collection('singers').orderBy('followers', 'desc').limit(5).get();
         const topSingers = [];
 
         for (const doc of singersQuery.docs) {
@@ -71,7 +71,7 @@ const getDashboard= async (req,res)=>{
         }
 
             // Lấy các playlist theo thứ tự được nghe từ gần tới xa
-        const playlistsQuery = await db.collection('playlist').get();
+        const playlistsQuery = await db.collection('playlist').limit(5).get();
         const playlists = [];
         playlistsQuery.forEach(doc => {
         playlists.push({ id: doc.id, ...doc.data() });

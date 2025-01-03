@@ -79,12 +79,16 @@ const addSongToPlaylist= async (req, res)=>{
   const playlistId=req.params.id;
   const {songId}=req.body;
     try {
-        await db.collection('playlist').doc(playlistId).update({
-            songIds: admin.firestore.FieldValue.arrayUnion(songId)
-        });
-        res.status(201).json({
-            message: "Success."
-        });
+        // await db.collection('playlist').doc(playlistId).update({
+        //     songIds: admin.firestore.FieldValue.arrayUnion(songId)
+        // });
+        // res.status(201).json({
+        //     message: "Success."
+        // });
+        console.log({
+          playlistId: playlistId,
+          songId: songId
+        })
     } catch (error) {
         res.status(400).json({
             message:"Fail.",
@@ -98,10 +102,14 @@ const deleteSongFromPlaylist= async (req, res)=>{
   const {songId}=req.body;
     
     try {
-        await db.collection('playlist').doc(playlistId).update({
-            songIds: admin.firestore.FieldValue.arrayRemove(songId)
-        });
-        res.status(201).json({message: "Success."});
+        // await db.collection('playlist').doc(playlistId).update({
+        //     songIds: admin.firestore.FieldValue.arrayRemove(songId)
+        // });
+        // res.status(201).json({message: "Success."});
+        console.log({
+          playlistId: playlistId,
+          songId: songId
+        })
     } catch (error) {
         res.status(400).json({
             message:"Fail.",
