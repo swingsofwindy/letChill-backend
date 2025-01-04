@@ -5,7 +5,7 @@ const getLyrics=async (req,res)=>{
     const songId=req.params.id;
     try {
         const firebaseDoc = await db.collection('song').doc(songId).get();
-        //console.log(firebaseDoc.data())
+        // console.log(firebaseDoc.data())
         res.status(201).json(firebaseDoc.data().lyric);
     } catch (error) {
         res.status(400).json({
