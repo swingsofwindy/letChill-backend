@@ -40,9 +40,9 @@ const getPlaylist = async (req, res) => {
         //     "countSongs":0
         // }
     //]
-        res.status(201).json({
-            playlist: playlistData
-        })
+        // res.status(201).json({
+        //     playlist: playlistData
+        // })
     } catch (error) {
         res.status(400).json({
             message: "Fail.",
