@@ -12,14 +12,14 @@ const getSinger=async(req,res)=>{
             },
           });
         const artist = response.data.results[0]; 
-        // const artistDoc = await db.collection("singers").doc(artistId).get();
-        // if (!artistDoc.exists) {
-        //     await db.collection('singers').doc(artistId).set({
-        //         artistId: artistId,
-        //         artistName: artist.name,
-        //         followers : 0
-        //     });
-        //   }
+        const artistDoc = await db.collection("singers").doc(artistId).get();
+        if (!artistDoc.exists) {
+            await db.collection('singers').doc(artistId).set({
+                artistId: artistId,
+                artistName: artist.name,
+                followers : 0
+            });
+          }
         const artistInfo = {
         id: artist.id,
         name: artist.name || "Unknown Artist",

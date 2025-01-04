@@ -14,16 +14,16 @@ const getInformation = async (req, res) => {
       },
     });
     const song = response.data.results[0];
-    // const firebaseDoc = await db.collection('song').doc(songId).get();
-    // if (!firebaseDoc.exists) {
-    //   await db.collection('song').doc(songId).set({
-    //     name: song.name,
-    //     tags: [],
-    //     composer: "",
-    //     lyric: [],
-    //     play: 0,
-    //   });
-    // }
+    const firebaseDoc = await db.collection('song').doc(songId).get();
+    if (!firebaseDoc.exists) {
+      await db.collection('song').doc(songId).set({
+        name: song.name,
+        tags: [],
+        composer: "",
+        lyric: [],
+        play: 0,
+      });
+    }
     const enhancedSong = {
       id: songId,
       name: song.name,
@@ -32,14 +32,14 @@ const getInformation = async (req, res) => {
       image: song.image,
       releaseDate: song.releasedate,
       duration: song.duration,
-      // genre: firebaseDoc.data().tags || [], // Lấy thể loại từ tags của Jamendo (nếu có)
-      // composer: firebaseDoc.data().composer || "", // Giá trị mặc định là rỗng
-      // lyric: firebaseDoc.data().lyric||[], // Giá trị mặc định là rỗng
-      // play: firebaseDoc.data().play || 0, // Giá trị mặc định là 0 
-      genre:  [], // Lấy thể loại từ tags của Jamendo (nếu có)
-      composer: "", // Giá trị mặc định là rỗng
-      lyric: [], // Giá trị mặc định là rỗng
-      play: 0, // Giá trị mặc định là 0 
+      genre: firebaseDoc.data().tags || [], // Lấy thể loại từ tags của Jamendo (nếu có)
+      composer: firebaseDoc.data().composer || "", // Giá trị mặc định là rỗng
+      lyric: firebaseDoc.data().lyric||[], // Giá trị mặc định là rỗng
+      play: firebaseDoc.data().play || 0, // Giá trị mặc định là 0 
+      // genre:  [], // Lấy thể loại từ tags của Jamendo (nếu có)
+      // composer: "", // Giá trị mặc định là rỗng
+      // lyric: [], // Giá trị mặc định là rỗng
+      // play: 0, // Giá trị mặc định là 0 
     }
     res.status(201).json(enhancedSong)
 

@@ -5,16 +5,16 @@ const axios=require('axios');
 const getPlaylistDetail=async (req,res)=>{
   const playlistId=req.params.id;
   try {
-        // // Lấy thông tin danh sách phát từ Firebase
-        // const playlistDoc = await db.collection('playlist').doc(playlistId).get();
+        // Lấy thông tin danh sách phát từ Firebase
+        const playlistDoc = await db.collection('playlist').doc(playlistId).get();
     
-        // if (!playlistDoc.exists) {
-        //   return res.status(404).json({ message: 'Playlist not found' });
-        // }
+        if (!playlistDoc.exists) {
+          return res.status(404).json({ message: 'Playlist not found' });
+        }
         
-        // const playlistData = playlistDoc.data();
-        //const songIds = playlistData.songIds || []; // Danh sách songId từ playlist
-        const songIds=[1170307, 472817, 962094, 518809]
+        const playlistData = playlistDoc.data();
+        const songIds = playlistData.songIds || []; // Danh sách songId từ playlist
+        //const songIds=[1170307, 472817, 962094, 518809]
         // Lấy thông tin bài hát từ cả Jamendo và Firebase
         const songDetails = await Promise.all(
           songIds.map(async (songId) => {
@@ -30,9 +30,9 @@ const getPlaylistDetail=async (req,res)=>{
     
               const song = jamendoResponse.data.results[0]; // Kết quả từ Jamendo
     
-              // // Truy vấn Firebase
-              // const firebaseDoc = await db.collection('song').doc(songId).get();
-              // const firebaseData = firebaseDoc.exists ? firebaseDoc.data() : {};
+              // Truy vấn Firebase
+              const firebaseDoc = await db.collection('song').doc(songId).get();
+              const firebaseData = firebaseDoc.exists ? firebaseDoc.data() : {};
     
               // Kết hợp thông tin từ cả Jamendo và Firebase
               return {
@@ -43,12 +43,12 @@ const getPlaylistDetail=async (req,res)=>{
                 image: song?.album_image || '',
                 releaseDate: song?.releasedate || '',
                 genre: song?.tags || [],
-                // composer: firebaseData?.composer || '', // Giá trị mặc định nếu không có
-                // lyric: firebaseData?.lyric || '', // Giá trị mặc định nếu không có
-                // play: firebaseData?.play || 0, // Giá trị mặc định nếu không có
-                composer:  '', // Giá trị mặc định nếu không có
-                lyric: [], // Giá trị mặc định nếu không có
-                play: 0, // Giá trị mặc định nếu không có
+                composer: firebaseData?.composer || '', // Giá trị mặc định nếu không có
+                lyric: firebaseData?.lyric || '', // Giá trị mặc định nếu không có
+                play: firebaseData?.play || 0, // Giá trị mặc định nếu không có
+                // composer:  '', // Giá trị mặc định nếu không có
+                // lyric: [], // Giá trị mặc định nếu không có
+                // play: 0, // Giá trị mặc định nếu không có
               };
             } catch (error) {
               console.error(`Error fetching details for songId: ${songId}`, error);
@@ -60,19 +60,19 @@ const getPlaylistDetail=async (req,res)=>{
         // Lọc bỏ các bài hát null (nếu lỗi khi lấy dữ liệu)
         const validSongs = songDetails.filter((song) => song !== null);
     
-        // Trả về thông tin danh sách phát
-        // const responseData = {
-        //   playlistId,
-        //   name: playlistData.name || 'Unknown Playlist',
-        //   description: playlistData.description || '',
-        //   songs: validSongs, // Danh sách bài hát
-        // };
+        //Trả về thông tin danh sách phát
         const responseData = {
-          playlistId: playlistId,
-          name: 'Chill' || 'Unknown Playlist',
-          description: 'Say hi.' || '',
+          playlistId,
+          name: playlistData.name || 'Unknown Playlist',
+          description: playlistData.description || '',
           songs: validSongs, // Danh sách bài hát
         };
+        // const responseData = {
+        //   playlistId: playlistId,
+        //   name: 'Chill' || 'Unknown Playlist',
+        //   description: 'Say hi.' || '',
+        //   songs: validSongs, // Danh sách bài hát
+        // };
         // await db.collection('playlist').doc(playlistId).update({
         //   lastPlayed: admin.firestore.FieldValue.serverTimestamp()
       // });
@@ -88,12 +88,12 @@ const addSongToPlaylist= async (req, res)=>{
   const playlistId=req.params.id;
   const {songId}=req.body;
     try {
-        // await db.collection('playlist').doc(playlistId).update({
-        //     songIds: admin.firestore.FieldValue.arrayUnion(songId)
-        // });
-        // res.status(201).json({
-        //     message: "Success."
-        // });
+        await db.collection('playlist').doc(playlistId).update({
+            songIds: admin.firestore.FieldValue.arrayUnion(songId)
+        });
+        res.status(201).json({
+            message: "Success."
+        });
         console.log({
           playlistId: playlistId,
           songId: songId
@@ -111,10 +111,10 @@ const deleteSongFromPlaylist= async (req, res)=>{
   const {songId}=req.body;
     
     try {
-        // await db.collection('playlist').doc(playlistId).update({
-        //     songIds: admin.firestore.FieldValue.arrayRemove(songId)
-        // });
-        // res.status(201).json({message: "Success."});
+        await db.collection('playlist').doc(playlistId).update({
+            songIds: admin.firestore.FieldValue.arrayRemove(songId)
+        });
+        res.status(201).json({message: "Success."});
         console.log({
           playlistId: playlistId,
           songId: songId
