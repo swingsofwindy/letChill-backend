@@ -22,27 +22,6 @@ const getPlaylist = async (req, res) => {
         res.status(201).json({
             playlist: playlistData
         })
-        // const playlistData=[
-        //     {
-        //     "id":"1",
-        //     "creator":"Smile",
-        //     "name":"Chill",
-        //     "avtUrl":"https://basicns.com/images/Dap%20noi%20ban%20sat%20di%20hoc%20long%20banner.jpg",
-        //     "description":"Chill đi.",
-        //     "countSongs":0
-        // },
-        // {
-        //     "id":"2",
-        //     "creator":"Smile",
-        //     "name":"Chill",
-        //     "avtUrl":"https://basicns.com/images/Dap%20noi%20ban%20sat%20di%20hoc%20long%20banner.jpg",
-        //     "description":"Chill đi.",
-        //     "countSongs":0
-        // }
-    //]
-        // res.status(201).json({
-        //     playlist: playlistData
-        // })
     } catch (error) {
         res.status(400).json({
             message: "Fail.",
@@ -79,11 +58,11 @@ const addPlaylist = async (req, res) => {
     const { uid, name, avtUrl, description } = req.body;
 
     // Kiểm tra dữ liệu đầu vào
-    if (!uid || !name) {
-        return res.status(400).json({
-            message: "Missing required fields: 'uid' or 'name'.",
-        });
-    }
+    // if (!uid || !name) {
+    //     return res.status(400).json({
+    //         message: "Missing required fields: 'uid' or 'name'.",
+    //     });
+    // }
 
     try {
         // Tạo playlist mới
@@ -94,8 +73,6 @@ const addPlaylist = async (req, res) => {
             avtUrl: avtUrl || '',
             description: description || '',
             songIds: [],
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            lastPlayed: admin.firestore.FieldValue.serverTimestamp(),
         });
 
         // Trả về ID của playlist mới tạo
@@ -125,7 +102,7 @@ const deletePlaylist = async (req, res) => {
             error: error.message
         })
     }
-    console.log({playlistId: playlistId});
+    console.log({ playlistId: playlistId });
 }
 
 module.exports = {
