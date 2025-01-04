@@ -77,14 +77,6 @@ const updatePlaylist = async (req, res) => {
 
 const addPlaylist = async (req, res) => {
     const { uid, name, avtUrl, description } = req.body;
-
-    // Kiểm tra dữ liệu đầu vào
-    if (!uid || !name) {
-        return res.status(400).json({
-            message: "Missing required fields: 'uid' or 'name'.",
-        });
-    }
-
     try {
         // Tạo playlist mới
         const newPlaylistRef = db.collection('playlist').doc();
@@ -94,8 +86,6 @@ const addPlaylist = async (req, res) => {
             avtUrl: avtUrl || '',
             description: description || '',
             songIds: [],
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            lastPlayed: admin.firestore.FieldValue.serverTimestamp(),
         });
 
         // Trả về ID của playlist mới tạo

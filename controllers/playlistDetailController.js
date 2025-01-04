@@ -64,6 +64,7 @@ const getPlaylistDetail=async (req,res)=>{
         const responseData = {
           playlistId,
           name: playlistData.name || 'Unknown Playlist',
+          avtUrl:playlistData.avtUrl,
           description: playlistData.description || '',
           songs: validSongs, // Danh sách bài hát
         };

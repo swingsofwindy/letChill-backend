@@ -24,6 +24,8 @@ const getInformation = async (req, res) => {
         play: 0,
       });
     }
+    console.log(song)
+
     const enhancedSong = {
       id: songId,
       name: song.name,
@@ -41,9 +43,11 @@ const getInformation = async (req, res) => {
       // lyric: [], // Giá trị mặc định là rỗng
       // play: 0, // Giá trị mặc định là 0 
     }
+
     res.status(201).json(enhancedSong)
 
   } catch (error) {
+    console.log('bug')
     res.status(400).json({
       message: "Fail.",
       error: error.message
@@ -55,9 +59,7 @@ const getRandomSongId = async (req, res) => {
   console.log('randomSongId');
   try {
    const randomSongId= await RandomSongId();
-   if(!randomSongId)
-    res.status(404).json('Không tìm thấy.')
-  else
+
   res.status(201).json({id:randomSongId});
   } catch (error) {
     console.error('Error fetching random song:', error);
