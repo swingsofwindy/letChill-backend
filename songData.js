@@ -1,8 +1,8 @@
 const axios = require('axios');
-const {db, admin}=require('./firebase')
+const { db, admin } = require('./firebase')
 const { MeiliSearch } = require('meilisearch');
 
-const CLIENT_ID=process.env.CLIENT_ID;
+const CLIENT_ID = process.env.CLIENT_ID;
 // Khởi tạo Meilisearch Client
 const meiliClient = new MeiliSearch({ host: 'http://127.0.0.1:7700' }); // Thay bằng URL Meilisearch của bạn
 const meiliIndex = meiliClient.index('songs'); // Tên index bạn muốn tạo cho bài hát
@@ -10,15 +10,15 @@ const meiliIndex = meiliClient.index('songs'); // Tên index bạn muốn tạo 
 async function searchInMeilisearch(query) {
   try {
 
-        const searchResult = await meiliIndex.search(query, {
+    const searchResult = await meiliIndex.search(query, {
       // Cấu hình fuzzy search và các trường tìm kiếm
-      attributesToSearchOn : ['name', 'artist', 'lyric'],
+      attributesToSearchOn: ['name', 'artist', 'lyric'],
       matchingStrategy: 'all', // Bật fuzzy search (tìm kiếm gần đúng)
       limit: 10,
     });
 
     if (searchResult.hits.length > 0) {
-      
+
       return searchResult.hits; // Trả về danh sách các bài hát tìm thấy
     }
     return null; // Không tìm thấy kết quả trong Meilisearch
@@ -70,16 +70,16 @@ async function searchInJamendo(query) {
           // composer: firebaseDoc.data.composer || "", // Giá trị mặc định là rỗng
           // lyric: firebaseDoc.data.lyric || [], // Giá trị mặc định là rỗng
           // play: firebaseDoc.data.play || 0, // Giá trị mặc định là 0
-          genre:  [], // Lấy thể loại từ tags của Jamendo (nếu có)
-          composer:  "", // Giá trị mặc định là rỗng
+          genre: [], // Lấy thể loại từ tags của Jamendo (nếu có)
+          composer: "", // Giá trị mặc định là rỗng
           lyric: [], // Giá trị mặc định là rỗng
-          play:  0, // Giá trị mặc định là 0
+          play: 0, // Giá trị mặc định là 0
         };
 
         return enhancedSong;
       })
     );
-    await meiliIndex.addDocuments(enhancedSongs);
+    // await meiliIndex.addDocuments(enhancedSongs);
     return enhancedSongs;
   } catch (error) {
     console.error('Error searching or enhancing songs:', error);
@@ -90,15 +90,15 @@ async function searchInJamendo(query) {
 async function searchMeilisearch(query) {
   try {
 
-        const searchResult = await meiliIndex.search(query, {
+    const searchResult = await meiliIndex.search(query, {
       // Cấu hình fuzzy search và các trường tìm kiếm
-      attributesToSearchOn : ['name', 'artist', 'lyric'],
+      attributesToSearchOn: ['name', 'artist', 'lyric'],
       matchingStrategy: 'all', // Bật fuzzy search (tìm kiếm gần đúng)
       limit: 1,
     });
 
     if (searchResult.hits.length > 0) {
-      
+
       return searchResult.hits; // Trả về danh sách các bài hát tìm thấy
     }
     return null; // Không tìm thấy kết quả trong Meilisearch
@@ -153,7 +153,7 @@ async function searchJamendo(query) {
           genre: [], // Lấy thể loại từ tags của Jamendo (nếu có)
           composer: "", // Giá trị mặc định là rỗng
           lyric: [], // Giá trị mặc định là rỗng
-          play:  0, // Giá trị mặc định là 0
+          play: 0, // Giá trị mặc định là 0
         };
 
         return enhancedSong;
@@ -198,7 +198,7 @@ async function RandomSongId() {
 }
 
 
-module.exports={
+module.exports = {
   searchInMeilisearch,
   searchInJamendo,
   searchMeilisearch,

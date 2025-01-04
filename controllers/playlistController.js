@@ -22,27 +22,6 @@ const getPlaylist = async (req, res) => {
         res.status(201).json({
             playlist: playlistData
         })
-        // const playlistData=[
-        //     {
-        //     "id":"1",
-        //     "creator":"Smile",
-        //     "name":"Chill",
-        //     "avtUrl":"https://basicns.com/images/Dap%20noi%20ban%20sat%20di%20hoc%20long%20banner.jpg",
-        //     "description":"Chill đi.",
-        //     "countSongs":0
-        // },
-        // {
-        //     "id":"2",
-        //     "creator":"Smile",
-        //     "name":"Chill",
-        //     "avtUrl":"https://basicns.com/images/Dap%20noi%20ban%20sat%20di%20hoc%20long%20banner.jpg",
-        //     "description":"Chill đi.",
-        //     "countSongs":0
-        // }
-    //]
-        // res.status(201).json({
-        //     playlist: playlistData
-        // })
     } catch (error) {
         res.status(400).json({
             message: "Fail.",
@@ -77,6 +56,7 @@ const updatePlaylist = async (req, res) => {
 
 const addPlaylist = async (req, res) => {
     const { uid, name, avtUrl, description } = req.body;
+
     try {
         // Tạo playlist mới
         const newPlaylistRef = db.collection('playlist').doc();
@@ -115,7 +95,7 @@ const deletePlaylist = async (req, res) => {
             error: error.message
         })
     }
-    console.log({playlistId: playlistId});
+    console.log({ playlistId: playlistId });
 }
 
 module.exports = {
