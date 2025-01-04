@@ -16,7 +16,6 @@ const getPlaylist = async (req, res) => {
                 createdAt: data.createdAt
                     ? new Date(data.createdAt._seconds * 1000) // Chuyển đổi từ _seconds sang Date
                     : null,
-                countSongs: data.songIds.length
             }
         })
 
