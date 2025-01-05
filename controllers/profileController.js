@@ -10,21 +10,28 @@ const getProfile= async (req, res)=>{
             console.log("User not exist!");
             return res.status(404).json({ message: "User not found." });;
         }
-        const userName=userDoc.data().name;
+        const user=userDoc.data();
 
-        const playlistSnapshot=await db.collection('playlist').where('creatorId','==',uid).get();
+        const playlistSnapshot=await db.collection('playlist').where('creator','==',uid).get();
+        const playlistData = playlistSnapshot.docs.map(doc => {
+            const data = doc.data();
+
+            return {
+                id: doc.id,
+                name: data.name,
+                avtUrl: data.avtUrl,
+                description: data.description
+            }
+        })
         const playlistCount=playlistSnapshot.size;
-        console.log(`Tên người dùng: ${userName}`);
+        console.log(`Tên người dùng: ${user.name}`);
         console.log(`Số danh sách phát: ${playlistCount}`);
 
         res.status(200).json({
-            name: userName,
+            name: user.name,
+            imageUrl: user.imageUrl||'',
+            playlist: playlistData,
             playlistCount: playlistCount
-        });
-        console.log({uid: uid});
-         res.status(200).json({
-            name: 'YenTran',
-            playlistCount: '0'
         });
     }
     catch(error){
@@ -34,14 +41,18 @@ const getProfile= async (req, res)=>{
 
 //UPDATE profile
 const updateProfile=async(req, res)=>{
-    const {uid, newName}=req.body;
+    const uid=req.params.id;
+    const {newName, imageUrl}=req.body;
     try{
         const userRef=db.collection('users').doc(uid);
-        await userRef.update({name:newName});
+        await userRef.update({
+            name:newName,
+            imageUrl: imageUrl
+        });
         res.status(200).json({message:"Rename success!"})
         console.log({
-            uid: uid,
-            newName: newName
+            newName: newName,
+            imageUrl: imageUrl
         })
     }
     catch(error){

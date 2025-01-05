@@ -87,21 +87,12 @@ async function searchInJamendo(query) {
   }
 };
 
-async function searchMeilisearch(query) {
+async function searchMeilisearch() {
   try {
 
-    const searchResult = await meiliIndex.search(query, {
-      // Cấu hình fuzzy search và các trường tìm kiếm
-      attributesToSearchOn: ['name', 'artist', 'lyric'],
-      matchingStrategy: 'all', // Bật fuzzy search (tìm kiếm gần đúng)
-      limit: 1,
-    });
-
-    if (searchResult.hits.length > 0) {
-
-      return searchResult.hits; // Trả về danh sách các bài hát tìm thấy
-    }
-    return null; // Không tìm thấy kết quả trong Meilisearch
+    const index = meiliClient.index('songs');
+    const { hits } = await index.search('', { limit: 5 });
+    return hits;
   } catch (error) {
     console.error('Error searching in Meilisearch:', error);
     return null;
@@ -125,35 +116,12 @@ async function searchJamendo(query) {
     const enhancedSongs = await Promise.all(
       songs.map(async (song) => {
         const songId = song.id;
-
-        // Kiểm tra thông tin trong Firebase
-        // const firebaseDoc = await db.collection('song').doc(songId).get();
-        // if (!firebaseDoc.exists) {
-        //   await db.collection('song').doc(songId).set({
-        //     name: song.name,
-        //     tags:[],
-        //     composer: "",
-        //     lyric: [],
-        //     play: 0,
-        //   });
-        // }
         // Bổ sung thông tin mặc định nếu Firebase không có
         const enhancedSong = {
           id: songId,
           name: song.name,
-          artist_id: song.artist_id,
           artist: song.artist_name,
-          audio: song.audio,
           image: song.album_image,
-          releaseDate: song.releasedate,
-          // genre: firebaseDoc.data().tags || [], // Lấy thể loại từ tags của Jamendo (nếu có)
-          // composer: firebaseDoc.data().composer || "", // Giá trị mặc định là rỗng
-          // lyric: firebaseDoc.data().lyric || [], // Giá trị mặc định là rỗng
-          // play: firebaseDoc.data().play || 0, // Giá trị mặc định là 0
-          genre: [], // Lấy thể loại từ tags của Jamendo (nếu có)
-          composer: "", // Giá trị mặc định là rỗng
-          lyric: [], // Giá trị mặc định là rỗng
-          play: 0, // Giá trị mặc định là 0
         };
 
         return enhancedSong;

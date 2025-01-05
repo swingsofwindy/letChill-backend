@@ -7,6 +7,6 @@ const router=express.Router();
 router.get('/:id', getProfile);
 
 //CREATE profile
-router.patch('/', updateProfile);
+router.patch('/:id', updateProfile);
 
 module.exports=router;

@@ -24,8 +24,7 @@ const getInformation = async (req, res) => {
         play: 0,
       });
     }
-    console.log(song)
-
+    
     const enhancedSong = {
       id: songId,
       name: song.name,

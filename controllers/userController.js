@@ -26,7 +26,7 @@ const signupUser=async (req,res)=>{
             name:name,
             birth: birth,
             gender: gender,
-            avtUrl:""
+            imageUrl:""
         });
 
         res.status(201).json({
