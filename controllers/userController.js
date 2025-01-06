@@ -1,5 +1,5 @@
 const admin=require('firebase-admin');
-
+const { db } = require('../firebase')
 //Login
  const signinUser=async (req,res)=>{
     const {email, password}=req.body;
@@ -29,6 +29,14 @@ const signupUser=async (req,res)=>{
             imageUrl:""
         });
 
+        const newPlaylistRef = db.collection('playlist').doc();
+        await newPlaylistRef.set({
+            creator:userRecord. uid,
+            name: 'Danh sách yêu thích',
+            avtUrl: 'https://res.cloudinary.com/di4kdlfr3/image/upload/v1736137850/qy5yxyvmevh36ndg1dj7.jpg',
+            description: 'Danh sách yêu thích của tôi',
+            songIds: [],
+        });
         res.status(201).json({
             message: "Đăng ký thành công!",
             uid: userRecord.uid
