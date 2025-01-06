@@ -1,6 +1,6 @@
 const { db, admin } = require('../firebase')
 const axios = require('axios');
-const {RandomSongId}=require('../songData')
+const { RandomSongId } = require('../songData')
 //
 const getInformation = async (req, res) => {
   const songId = req.params.id;
@@ -24,7 +24,7 @@ const getInformation = async (req, res) => {
         play: 0,
       });
     }
-    
+
     const enhancedSong = {
       id: songId,
       name: song.name,
@@ -35,7 +35,7 @@ const getInformation = async (req, res) => {
       duration: song.duration,
       genre: firebaseDoc.data().tags || [], // Lấy thể loại từ tags của Jamendo (nếu có)
       composer: firebaseDoc.data().composer || "", // Giá trị mặc định là rỗng
-      lyric: firebaseDoc.data().lyric||[], // Giá trị mặc định là rỗng
+      lyric: firebaseDoc.data().lyric || [], // Giá trị mặc định là rỗng
       play: firebaseDoc.data().play || 0, // Giá trị mặc định là 0 
       // genre:  [], // Lấy thể loại từ tags của Jamendo (nếu có)
       // composer: "", // Giá trị mặc định là rỗng
@@ -57,9 +57,9 @@ const getInformation = async (req, res) => {
 const getRandomSongId = async (req, res) => {
   console.log('randomSongId');
   try {
-   const randomSongId= await RandomSongId();
+    const randomSongId = await RandomSongId();
 
-  res.status(201).json({id:randomSongId});
+    res.status(201).json({ id: randomSongId });
   } catch (error) {
     console.error('Error fetching random song:', error);
     res.status(500).send('Server Error');
