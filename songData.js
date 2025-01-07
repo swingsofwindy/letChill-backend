@@ -61,7 +61,6 @@ async function searchInJamendo(query) {
         const enhancedSong = {
           id: songId,
           name: song.name,
-          artist_id: song.artist_id,
           artist: song.artist_name,
           audio: song.audio,
           image: song.album_image,
@@ -79,7 +78,10 @@ async function searchInJamendo(query) {
         return enhancedSong;
       })
     );
-    // await meiliIndex.addDocuments(enhancedSongs);
+    console.log(enhancedSongs);
+    await meiliIndex.addDocuments(enhancedSongs).then((res) => {
+      console.log('Documents added:', res)
+    })
     return enhancedSongs;
   } catch (error) {
     console.error('Error searching or enhancing songs:', error);
