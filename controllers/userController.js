@@ -1,4 +1,7 @@
+
+
 const admin = require('firebase-admin');
+const { db } = require('../firebase')
 
 //Login
 const signinUser = async (req, res) => {
