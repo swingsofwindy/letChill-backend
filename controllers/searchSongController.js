@@ -1,20 +1,20 @@
 const { searchInMeilisearch, searchInJamendo } = require('../songData')
 const CLIENT_ID = process.env.CLIENT_ID;
 //
-const getListSongs=async(req, res)=>{
-    const query=req.params.id;
-    try {
-      // Tìm kiếm trong Meilisearch
-      console.log(query)
-      const meiliResult = await searchInMeilisearch(query);
-      console.log(query);
-      if (meiliResult) {
-        return res.status(200).json(meiliResult); // Trả về kết quả tìm kiếm từ Meilisearch
-      }
+const getListSongs = async (req, res) => {
+  const query = req.params.id;
+  try {
+    // Tìm kiếm trong Meilisearch
+    console.log(query)
+    const meiliResult = await searchInMeilisearch(query);
+    console.log(query);
+    if (meiliResult) {
+      return res.status(200).json(meiliResult); // Trả về kết quả tìm kiếm từ Meilisearch
+    }
 
-    // if (meiliResult) {
-    //   return res.status(200).json(meiliResult); // Trả về kết quả tìm kiếm từ Meilisearch
-    // }
+    if (meiliResult) {
+      return res.status(200).json(meiliResult); // Trả về kết quả tìm kiếm từ Meilisearch
+    }
 
     // Nếu không tìm thấy trong Meilisearch, tìm kiếm trong Jamendo
     const jamendoResult = await searchInJamendo(query);
