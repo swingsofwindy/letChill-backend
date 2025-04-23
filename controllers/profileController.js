@@ -1,40 +1,40 @@
-const {db}=require('../firebase')
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 //GET profile
 const getProfile= async (req, res)=>{
     const uid=req.params.id;
-    try{
-        const userDoc=await db.collection('users').doc(uid).get();
-        if(!userDoc.exists)
-        {
-            console.log("User not exist!");
-            return res.status(404).json({ message: "User not found." });;
-        }
-        const user=userDoc.data();
-
-        const playlistSnapshot=await db.collection('playlist').where('creator','==',uid).get();
-        const playlistData = playlistSnapshot.docs.map(doc => {
-            const data = doc.data();
-
-            return {
-                id: doc.id,
-                name: data.name,
-                avtUrl: data.avtUrl,
-                description: data.description
+    try {
+      // Lấy thông tin người dùng và danh sách phát liên quan
+      const user = await prisma.user.findUnique({
+        where: { MaNguoiDung: uid },
+        include: {
+          DanhSachPhat: {
+            select: {
+              MaDanhSach: true,
+              TenDanhSach: true,
+              AvatarUrl: true
             }
-        })
-        const playlistCount=playlistSnapshot.size;
-        console.log(`Tên người dùng: ${user.name}`);
-        console.log(`Số danh sách phát: ${playlistCount}`);
-
-        res.status(200).json({
-            name: user.name,
-            imageUrl: user.imageUrl||'',
-            playlist: playlistData,
-            playlistCount: playlistCount
-        });
-    }
-    catch(error){
+          }
+        }
+      });
+  
+      if (!user) {
+        return res.status(404).json({ message: "User not found." });
+      }
+  
+      const playlistCount = user.DanhSachPhat.length;
+      res.status(200).json({
+        name: user.TenNguoiDung,
+        imageUrl: user.AvatarUrl,
+        playlist: user.DanhSachPhat.map(p => ({
+          id: p.MaDanhSach,
+          name: p.TenDanhSach,
+          avtUrl: p.AvatarUrl
+        })),
+        playlistCount: playlistCount
+      });
+    } catch(error){
         res.status(400).json({message:'Fail.', error:error.message});
     }
 }
@@ -43,19 +43,18 @@ const getProfile= async (req, res)=>{
 const updateProfile=async(req, res)=>{
     const uid=req.params.id;
     const {newName, imageUrl}=req.body;
-    try{
-        const userRef=db.collection('users').doc(uid);
-        await userRef.update({
-            name:newName,
-            imageUrl: imageUrl
-        });
-        res.status(200).json({message:"Rename success!"})
-        console.log({
-            newName: newName,
-            imageUrl: imageUrl
-        })
-    }
-    catch(error){
+    try {
+      await prisma.user.update({
+        where: { MaNguoiDung: uid },
+        data: {
+          TenNguoiDung: newName,
+          AvatarUrl: imageUrl
+        }
+      });
+  
+      res.status(200).json({ message: "Profile update success!" });
+  
+    } catch(error){
         res.status(400).json({message:'Fail.', error:error.message});
     }
 }

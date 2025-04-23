@@ -1,0 +1,122 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role{
+  USER
+  CREATOR
+  ADMIN
+}
+
+model User {
+  MaNguoiDung  String @id
+  TenNguoiDung String?
+  NgaySinh     DateTime?
+  GioiTinh     String?
+  Email        String @unique
+  AvatarUrl    String?
+  Role         Role
+
+  DanhSachPhat DanhSachPhat[]
+  DanhGia      DanhGia[]
+  TheoDoi      TheoDoi[]
+}
+
+model DanhSachPhat {
+  MaDanhSach    Int @id @default(autoincrement())
+  MaNguoiDung   String
+  TenDanhSach   String
+  AvatarUrl     String?
+  NgayDang      DateTime
+
+  User          User @relation(fields: [MaNguoiDung], references: [MaNguoiDung])
+  CTDanhSachPhat CT_DanhSachPhat[]
+}
+
+model CT_DanhSachPhat {
+  MaDanhSach Int
+  MaBaiHat   Int
+  NgayThem   DateTime
+
+  DanhSachPhat DanhSachPhat @relation(fields: [MaDanhSach], references: [MaDanhSach])
+  BaiHat       BaiHat @relation(fields: [MaBaiHat], references: [MaBaiHat])
+
+  @@id([MaDanhSach, MaBaiHat])
+}
+
+model BaiHat {
+  MaBaiHat   Int @id @default(autoincrement())
+  MaNhacSi   Int
+  MaTheLoai  Int
+  MaNgheSi   Int
+  MaNguoiDang String
+  TenBaiHat  String
+  BaiHatUrl  String?
+  DownloadUrl String?
+  AvatarUrl  String?
+  LoiBaiHat  String?
+  NgayDang   DateTime
+  LuotNghe   Int
+  TienDo     Int?
+
+  NhacSi     NhacSi @relation(fields: [MaNhacSi], references: [MaNhacSi])
+  TheLoai    TheLoai @relation(fields: [MaTheLoai], references: [MaTheLoai])
+  NgheSi     NgheSi @relation(fields: [MaNgheSi], references: [MaNgheSi])
+  DanhGia    DanhGia[]
+
+  CT_DanhSachPhat CT_DanhSachPhat[]
+}
+
+model NhacSi {
+  MaNhacSi  Int @id @default(autoincrement())
+  TenNhacSi String
+  BaiHat    BaiHat[]
+}
+
+model TheLoai {
+  MaTheLoai  Int @id @default(autoincrement())
+  TenTheLoai String
+  BaiHat     BaiHat[]
+}
+
+model NgheSi {
+  MaNgheSi   Int @id @default(autoincrement())
+  TenNgheSi  String
+  AvatarUrl  String?
+  BaiHat     BaiHat[]
+
+  TheoDoi TheoDoi[]
+}
+
+model DanhGia {
+  MaDanhGia   Int @id @default(autoincrement())
+  MaNguoiDung String
+  MaBaiHat    Int
+  MucDanhGia  Int
+  BinhLuan    String?
+
+  User  User @relation(fields: [MaNguoiDung], references: [MaNguoiDung])
+  BaiHat BaiHat @relation(fields: [MaBaiHat], references: [MaBaiHat])
+}
+
+model TheoDoi {
+  MaNgheSi   Int 
+  MaNguoiDung String
+
+  NgheSi  NgheSi @relation(fields: [MaNgheSi], references: [MaNgheSi])
+  User    User @relation(fields: [MaNguoiDung], references: [MaNguoiDung])
+
+  @@id([MaNgheSi, MaNguoiDung])
+}
+

@@ -1,5 +1,5 @@
 const express = require('express');
-const { getPlaylist, updatePlaylist, addPlaylist, deletePlaylist } = require('../controllers/playlistController');
+const { getPlaylist, updatePlaylist, createPlaylist, deletePlaylist } = require('../controllers/playlistController');
 
 const router = express.Router();
 
@@ -7,7 +7,7 @@ const router = express.Router();
 router.get('/', getPlaylist);
 
 //
-router.post('/', addPlaylist);
+router.post('/', createPlaylist);
 
 //
 router.patch('/:id', updatePlaylist);

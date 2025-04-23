@@ -1,38 +1,56 @@
-const { searchInMeilisearch, searchInJamendo } = require('../songData')
-const CLIENT_ID = process.env.CLIENT_ID;
-//
+const { searchInMeilisearch, searchInJamendo } = require('../songData');
+
 const getListSongs = async (req, res) => {
-  const query = req.params.id;
+  const query = req.query.query;
   try {
-    // Tìm kiếm trong Meilisearch
-    console.log(query)
     const meiliResult = await searchInMeilisearch(query);
-    console.log(query);
-    if (meiliResult) {
-      return res.status(200).json(meiliResult); // Trả về kết quả tìm kiếm từ Meilisearch
-    }
 
     if (meiliResult) {
-      return res.status(200).json(meiliResult); // Trả về kết quả tìm kiếm từ Meilisearch
+      return res.status(200).json({
+        hits: meiliResult.hits.map((hit) => ({
+          id: hit.id,
+          name: hit.name,
+          artist: hit.artist,
+          avatarUrl: hit.image,
+          link: hit.audio,
+          lyric: hit.lyric,
+          releaseDate: hit.releaseDate,
+          genre: hit.genre,
+          composer: hit.composer,
+          play: hit.play
+        })),
+        totalHits: meiliResult.hits.length,
+      }); // Trả về kết quả tìm kiếm từ Meilisearch
     }
-
-    // Nếu không tìm thấy trong Meilisearch, tìm kiếm trong Jamendo
     const jamendoResult = await searchInJamendo(query);
 
     if (jamendoResult) {
-      // Lưu bài hát từ Jamendo vào Firebase
 
-      return res.status(200).json(
-        jamendoResult
-      ); // Trả về bài hát từ Jamendo
+      return res.status(200).json({
+        hits: jamendoResult.map((song) => ({
+          id: song.id,
+          name: song.name,
+          artist: song.artist,
+          avatarUrl: song.image,
+          link: song.audio,
+          lyric: song.lyric,
+          releaseDate: song.releaseDate,
+          genre: song.genre,
+          composer: song.composer,
+          play: song.play
+        })),
+        totalHits: jamendoResult.length,
+      }); 
     }
 
-    // Nếu không tìm thấy trong cả Firebase, Meilisearch và Jamendo, trả về lỗi 404
-    return res.status(404).json({ message: 'Song not found' });
+    return res.status(404).json({ 
+      error: 'SONG_NOT_FOUND' 
+    });
 
   } catch (error) {
-    console.error('Error in searchSong function:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    return res.status(500).json({ 
+      error: error.message 
+    });
   }
 }
 

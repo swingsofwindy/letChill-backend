@@ -1,15 +1,19 @@
-const {db}=require('../firebase');
 const axios=require('axios');
-const {searchJamendo, searchMeilisearch}=require('../songData')
-const JAMENDO_API_KEY = process.env.CLIENT_ID;
+const {searchMeilisearch}=require('../songData')
 
-// Hàm lấy thông tin bài hát từ Jamendo
-async function getSongFromJamendo() {
-    try {
+async function getSongFromMelisearch() {
+  try {
       const response = await searchMeilisearch();
-      return response;
+      return {
+          hits: response.hits.map((hit) => ({
+              id: hit.id,
+              name: hit.name,
+              avatarUrl: hit.image,
+              releaseDate: hit.releaseDate,
+              play: hit.play
+          })),
+      };
     } catch (error) {
-      console.error('Error fetching song, error');
       return null;
     }
   }
@@ -29,27 +33,26 @@ async function getSongFromJamendo() {
       const artist = response.data.results[0];
       const artistInfo = {
         id: artist.id,
-        name: artist.name || "Unknown Artist",
-        image: artist.image || "",
+        name: artist.name,
+        avatarUrl: artist.image,
         };
       return artistInfo;
     } catch (error) {
-      console.error('Error fetching singer from Jamendo', error);
       return null;
     }
   }
 
 const getDashboard= async (req,res)=>{
     try {
-        const topSongs= await getSongFromJamendo();
+        const topSongs= await getSongFromMelisearch();
+
         // Lấy top 10 ca sĩ có follower cao nhất
         const singerIds=[479140,543065,546016,439371, 7]
         const topSingers = [];
 
         for (const singerId of singerIds) {
-          //console.log(doc.data.artistId)
           const jamendoData = await getSingerFromJamendo(singerId);
-            topSingers.push(jamendoData);
+          topSingers.push(jamendoData);
         }
         // Trả về dữ liệu tổng hợp
         res.status(200).json({
@@ -57,9 +60,10 @@ const getDashboard= async (req,res)=>{
             topSingers,
         });
         
-        
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ 
+          error: error.message 
+        });
     }
 }
 

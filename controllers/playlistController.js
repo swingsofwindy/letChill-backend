@@ -1,32 +1,33 @@
-const { doc } = require('@firebase/firestore');
-const { db, admin } = require('../firebase')
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 //
 const getPlaylist = async (req, res) => {
-    try {
-        const playlistSnapshot = await db.collection('playlist').get();
-        const playlistData = playlistSnapshot.docs.map(doc => {
-            const data = doc.data();
+  try {
+    const playlists = await prisma.danhSachPhat.findMany({
+      where: { 
+        NOT: { TenDanhSach: 'Danh sách yêu thích' } 
+      }, // Exclude "Danh sách yêu thích"
+      include: {
+        CTDanhSachPhat: true
+      }
+    });
 
-            return {
-                id: doc.id,
-                creator: data.creator,
-                name: data.name,
-                avtUrl: data.avtUrl,
-                description: data.description,
-                countPlaylist: data.songIds.length,
-                createdAt: data.createdAt
-                    ? new Date(data.createdAt._seconds * 1000) // Chuyển đổi từ _seconds sang Date
-                    : null,
-                songIds: data.songIds,
-            }
-        })
+    const playlistData = playlists.map(p => ({
+      id: p.MaDanhSach,
+      creator: p.MaNguoiDung,
+      name: p.TenDanhSach,
+      avtUrl: p.AvatarUrl,
+      createdAt: p.NgayDang,
+      songsCount: p.CTDanhSachPhat.length
+    }));
 
-        res.status(201).json({
-            playlist: playlistData
-        })
+
+    res.status(200).json({ 
+      playlist: playlistData, 
+      playlistCount: playlistData.length});
+      
     } catch (error) {
         res.status(400).json({
-            message: "Fail.",
             error: error.message
         })
     }
@@ -35,51 +36,55 @@ const getPlaylist = async (req, res) => {
 
 //
 const updatePlaylist = async (req, res) => {
-    const playlistId = req.params.id;
-    const { name, avtUrl, description } = req.body;
+    const playlistId = parseInt(req.params.id,10);
+    const { name, avtUrl } = req.body;
     try {
-        const playlistRef = db.collection('playlist').doc(playlistId);
-        await playlistRef.update({
-            name: name,
-            avtUrl: avtUrl,
-            description: description
-        });
-        res.status(201).json({
-            message: "Success."
-        })
-        console.log(req.body)
+      const updatedPlaylist = await prisma.danhSachPhat.update({
+        where: { MaDanhSach: playlistId },
+        data: {
+          TenDanhSach: name,
+          AvatarUrl: avtUrl
+        }
+      });
+  
+      res.status(200).json({
+        updatedPlaylist: {
+          id: updatedPlaylist.MaDanhSach,
+          name: updatedPlaylist.TenDanhSach,
+          avatarUrl: updatedPlaylist.AvatarUrl,
+          createdAt: updatedPlaylist.NgayDang
+        }
+      });
+  
     } catch (error) {
         res.status(400).json({
-            message: "Fail.",
             error: error.message
         })
     }
 }
 
-const addPlaylist = async (req, res) => {
-    const { uid, name, avtUrl, description } = req.body;
-
+const createPlaylist = async (req, res) => {
+    const { uid, name, avtUrl } = req.body;
     try {
-        // Tạo playlist mới
-        const newPlaylistRef = db.collection('playlist').doc();
-        await newPlaylistRef.set({
-            creator: uid,
-            name: name,
-            avtUrl: avtUrl || '',
-            description: description || '',
-            songIds: [],
-        });
 
-        // Trả về ID của playlist mới tạo
-        res.status(201).json({
-            message: "Success.",
-            id: newPlaylistRef.id,
-        });
-        console.log(req.body)
+      const createdPlaylist = await prisma.danhSachPhat.create({
+        data: {
+          MaNguoiDung: uid,
+          TenDanhSach: name,
+          AvatarUrl: avtUrl,
+          NgayDang: new Date().toISOString(),
+        }
+      });
+  
+      res.status(200).json({ createdPlaylist: {
+        id: createdPlaylist.MaDanhSach,
+        name: createdPlaylist.TenDanhSach,
+        avatarUrl: createdPlaylist.AvatarUrl,
+        createdAt: createdPlaylist.NgayDang
+      }});
+
     } catch (error) {
-        console.error("Error adding playlist:", error); // Ghi log ra console
         res.status(400).json({
-            message: "Fail.",
             error: error.message,
         });
     }
@@ -87,22 +92,35 @@ const addPlaylist = async (req, res) => {
 
 
 const deletePlaylist = async (req, res) => {
-    const playlistId = req.params.id;
+    const playlistId = parseInt(req.params.id,10);
     try {
-        await db.collection('playlist').doc(playlistId).delete();
-        res.status(201).json({ message: "Success." });
+        // Xóa các bản ghi liên kết trong CT_DanhSachPhat trước
+        await prisma.cT_DanhSachPhat.deleteMany({
+          where: {
+            MaDanhSach: playlistId
+          }
+        });
+    
+        // Sau đó xóa chính playlist
+        await prisma.danhSachPhat.delete({
+          where: {
+            MaDanhSach: playlistId
+          }
+        });
+    
+        res.status(200).json();
+    
+        console.log({ playlistId: playlistId });
     } catch (error) {
         res.status(400).json({
-            message: "Fail.",
             error: error.message
         })
     }
-    console.log({ playlistId: playlistId });
 }
 
 module.exports = {
     getPlaylist,
     updatePlaylist,
-    addPlaylist,
+    createPlaylist,
     deletePlaylist
 }
