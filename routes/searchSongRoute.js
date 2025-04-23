@@ -4,6 +4,6 @@ const getListSongs = require('../controllers/searchSongController');
 const router = express.Router();
 
 //
-router.get('/:id', getListSongs);
+router.get('/', getListSongs);
 
 module.exports = router;

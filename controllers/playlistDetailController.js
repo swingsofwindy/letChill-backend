@@ -1,131 +1,186 @@
-const {db, admin}=require('../firebase')
-const axios=require('axios');
+const { PrismaClient } = require('@prisma/client');
+const e = require('cors');
+const { error } = require('firebase-functions/logger');
+const prisma = new PrismaClient();
 
 //
 const getPlaylistDetail=async (req,res)=>{
-  const playlistId=req.params.id;
+  const playlistId=parseInt(req.params.id,10);
   try {
-        // Lấy thông tin danh sách phát từ Firebase
-        const playlistDoc = await db.collection('playlist').doc(playlistId).get();
-    
-        if (!playlistDoc.exists) {
-          return res.status(404).json({ message: 'Playlist not found' });
-        }
-        
-        const playlistData = playlistDoc.data();
-        const songIds = playlistData.songIds || []; // Danh sách songId từ playlist
-        //const songIds=[1170307, 472817, 962094, 518809]
-        // Lấy thông tin bài hát từ cả Jamendo và Firebase
-        const songDetails = await Promise.all(
-          songIds.map(async (songId) => {
-            try {
-              // Truy vấn Jamendo API
-              const jamendoResponse = await axios.get('https://api.jamendo.com/v3.0/tracks', {
-                params: {
-                  client_id: process.env.CLIENT_ID, // Đảm bảo đã cấu hình CLIENT_ID trong biến môi trường
-                  format: 'json',
-                  id: songId,
-                },
-              });
-    
-              const song = jamendoResponse.data.results[0]; // Kết quả từ Jamendo
-    
-              // Truy vấn Firebase
-              const firebaseDoc = await db.collection('song').doc(songId).get();
-              const firebaseData = firebaseDoc.exists ? firebaseDoc.data() : {};
-    
-              // Kết hợp thông tin từ cả Jamendo và Firebase
-              return {
-                id: songId,
-                name: song?.name || '',
-                artist: song?.artist_name || '',
-                audio: song?.audio || '',
-                image: song?.album_image || '',
-                releaseDate: song?.releasedate || '',
-                genre: song?.tags || [],
-                composer: firebaseData?.composer || '', // Giá trị mặc định nếu không có
-                lyric: firebaseData?.lyric || '', // Giá trị mặc định nếu không có
-                play: firebaseData?.play || 0, // Giá trị mặc định nếu không có
-                // composer:  '', // Giá trị mặc định nếu không có
-                // lyric: [], // Giá trị mặc định nếu không có
-                // play: 0, // Giá trị mặc định nếu không có
-              };
-            } catch (error) {
-              console.error(`Error fetching details for songId: ${songId}`, error);
-              return null; // Trả về null nếu có lỗi
+    const playlistById = await prisma.danhSachPhat.findUnique({
+      where: { MaDanhSach: playlistId },
+      include: {
+        CTDanhSachPhat: {
+          include: {
+            BaiHat: {
+              include: {
+                NhacSi: true,
+                NgheSi: true,
+                TheLoai: true
+              }
             }
-          })
-        );
-    
-        // Lọc bỏ các bài hát null (nếu lỗi khi lấy dữ liệu)
-        const validSongs = songDetails.filter((song) => song !== null);
-    
-        //Trả về thông tin danh sách phát
-        const responseData = {
-          playlistId,
-          name: playlistData.name || 'Unknown Playlist',
-          avtUrl:playlistData.avtUrl,
-          description: playlistData.description || '',
-          songs: validSongs, // Danh sách bài hát
-        };
-        // const responseData = {
-        //   playlistId: playlistId,
-        //   name: 'Chill' || 'Unknown Playlist',
-        //   description: 'Say hi.' || '',
-        //   songs: validSongs, // Danh sách bài hát
-        // };
-        // await db.collection('playlist').doc(playlistId).update({
-        //   lastPlayed: admin.firestore.FieldValue.serverTimestamp()
-      // });
-        res.status(200).json(responseData);
-      } catch (error) {
-        console.error('Error fetching playlist details:', error);
-        res.status(500).json({ message: 'Internal Server Error', error: error.message });
+          }
+        }
       }
+    });
+
+    if (!playlistById) {
+      return res.status(404).json({ 
+        error: 'PLAYLIST_NOT_FOUND', 
+      });
+    }
+
+    const songDetails = playlistById.CTDanhSachPhat.map(item => {
+      const song = item.BaiHat;
+      return {
+        id: song.MaBaiHat,
+        name: song.TenBaiHat,
+        artist: song.NgheSi?.TenNgheSi,
+        audio: song.BaiHatUrl,
+        image: song.AvatarUrl,
+        releaseDate: song.NgayDang,
+        genre: song.TheLoai?.TenTheLoai,
+        composer: song.NhacSi?.TenNhacSi,
+        lyric: song.LoiBaiHat,
+        plays: song.LuotNghe,
+        duration: song.TienDo,
+        download: song.DownloadUrl
+      };
+    });
+
+    res.status(200).json({
+        playlistResponse:{
+          id: playlistById.MaDanhSach,
+          name: playlistById.TenDanhSach,
+          avtUrl: playlistById.AvatarUrl,
+          createdAt: playlistById.NgayDang,
+          songsCount: songDetails.length,
+          songs: songDetails
+        }
+      }
+    );
+  } catch (error) {
+    res.status(500).json({ 
+      error: error.message 
+    });
+  }
 }
 
 //
 const addSongToPlaylist= async (req, res)=>{
-  const playlistId=req.params.id;
+  const playlistId=parseInt(req.params.id,10);
   const {songId}=req.body;
-    try {
-        await db.collection('playlist').doc(playlistId).update({
-            songIds: admin.firestore.FieldValue.arrayUnion(songId)
-        });
-        res.status(201).json({
-            message: "Success."
-        });
-        console.log({
-          playlistId: playlistId,
-          songId: songId
-        })
-    } catch (error) {
-        res.status(400).json({
-            message:"Fail.",
-            error:error.message
-        })
+  try {
+    // Kiểm tra xem playlist và bài hát có tồn tại không
+    const playlist = await prisma.danhSachPhat.findUnique({
+      where: { MaDanhSach: playlistId }
+    });
+
+    if (!playlist) {
+      return res.status(404).json({
+        error: 'PLAYLIST_NOT_FOUND'
+      });
     }
+
+    const song = await prisma.baiHat.findUnique({
+      where: { MaBaiHat: songId }
+    });
+
+    if (!song) {
+      return res.status(404).json({
+        error: 'SONG_NOT_FOUND'
+      });
+    }
+
+    // Kiểm tra nếu bài hát đã tồn tại trong playlist
+    const existed = await prisma.cT_DanhSachPhat.findUnique({
+      where: {
+        MaDanhSach_MaBaiHat: {
+          MaDanhSach: playlistId,
+          MaBaiHat: songId
+        }
+      }
+    });
+
+    if (existed) {
+      return res.status(400).json({ message: 'SONG_ALREADY_IN_PLAYLIST' });
+    }
+
+    // Thêm bài hát vào playlist
+    await prisma.cT_DanhSachPhat.create({
+      data: {
+        MaDanhSach: playlistId,
+        MaBaiHat: songId,
+        NgayThem: new Date()
+      }
+    });
+
+    res.status(201).json();
+
+    console.log({ playlistId, songId });
+  } catch (error) {
+      res.status(400).json({
+          error:error.message
+      })
+  }
 }
 
 const deleteSongFromPlaylist= async (req, res)=>{
-  const playlistId=req.params.id;
+  const playlistId=parseInt(req.params.id,10);
   const {songId}=req.body;
-    
-    try {
-        await db.collection('playlist').doc(playlistId).update({
-            songIds: admin.firestore.FieldValue.arrayRemove(songId)
-        });
-        res.status(201).json({message: "Success."});
-        console.log({
-          playlistId: playlistId,
-          songId: songId
-        })
-    } catch (error) {
-        res.status(400).json({
-            message:"Fail.",
-            error: error.message
-        })
+  try {
+    // Kiểm tra sự tồn tại của playlist và bài hát
+    const playlist = await prisma.danhSachPhat.findUnique({
+      where: { MaDanhSach: playlistId }
+    });
+    if(!playlist) {
+      return res.status(404).json({
+        error: 'PLAYLIST_NOT_FOUND'
+      });
     }
+
+    const song = await prisma.baiHat.findUnique({
+      where: { MaBaiHat: songId }
+    });
+
+    if (!song) {
+      return res.status(404).json({
+        error: 'SONG_NOT_FOUND'
+      });
+    }
+
+    const songOfPlaylistToDelete = await prisma.cT_DanhSachPhat.findUnique({
+      where: {
+        MaDanhSach_MaBaiHat: {
+          MaDanhSach: playlistId,
+          MaBaiHat: songId
+        }
+      }
+    });
+
+    if (!songOfPlaylistToDelete) {
+      return res.status(400).json({
+        error: 'SONG_NOT_IN_PLAYLIST'
+      });
+    }
+    // Xoá bài hát khỏi bảng CT_DanhSachPhat (nếu tồn tại)
+    await prisma.cT_DanhSachPhat.delete({
+      where: {
+        MaDanhSach_MaBaiHat: {
+          MaDanhSach: playlistId,
+          MaBaiHat: songId
+        }
+      }
+    });
+
+    res.status(201).json();
+
+    console.log({ playlistId, songId });
+  } catch (error) {
+      res.status(400).json({
+          error: error.message
+      })
+  }
 }
 
 module.exports={

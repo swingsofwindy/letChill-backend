@@ -1,15 +1,24 @@
-const { db } = require("../firebase");
-
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 //
 const getLyrics=async (req,res)=>{
-    const songId=req.params.id;
+    const songId=parseInt(req.params.id,10);
     try {
-        const firebaseDoc = await db.collection('song').doc(songId).get();
-        // console.log(firebaseDoc.data())
-        res.status(201).json(firebaseDoc.data().lyric);
+      const song = await prisma.baiHat.findUnique({
+        where: { MaBaiHat: songId },
+        select: { LoiBaiHat: true }
+      });
+  
+      if (!song) {
+        return res.status(404).json({
+          error: "SONG_NOT_FOUND",
+        });
+      }
+  
+      res.status(200).json({ lyric: song.LoiBaiHat });
+    
     } catch (error) {
         res.status(400).json({
-            message: "Fail.",
             error: error.message
         })
     }
@@ -18,23 +27,24 @@ const getLyrics=async (req,res)=>{
 const addLyrics=async (req,res)=>{
     const {songName, newLyric}=req.body;
     try {
-        const querySnapshot=await db.collection('song').where('name','==',songName).get();
-        if(querySnapshot.empty)
-        {
-            res.status(404).json({
-                message:'No song found.',
-                error:error.message
-            })
+      const updated = await prisma.baiHat.updateMany({
+        where: {
+          TenBaiHat: songName
+        },
+        data: {
+          LoiBaiHat: newLyric
         }
-        querySnapshot.forEach(async(doc)=>{
-            await doc.ref.update({ lyric:newLyric});
+      });
+  
+      if (updated.count === 0) {
+        return res.status(404).json({
+          error: 'SONG_NOT_FOUND',
         });
-        res.status(201).json({
-            message:'All lyrics are updated.'
-        })
+      }
+  
+      res.status(201).json();
     } catch (error) {
         res.status(400).json({
-            message:'Error updating lyrics.',
             error:error.message
         })
     }

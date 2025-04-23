@@ -1,49 +1,40 @@
-const {db}=require('../firebase')
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+
 //GET rate va comment
 const getRate=async(req, res)=>{
-    const songId=req.params.id;
+    const songId=parseInt(req.params.id,10);
     try {
-        const racSnapshot=await db.collection('rac').where('songId','==',songId).get();
-        const racCount=racSnapshot.size;
-        if (racSnapshot.empty) {
-            return res.status(200).json({
-                racCount: 0,
-                racList: [],
-                message: "No matching documents found."
-            });
+      const rateAndComments = await prisma.danhGia.findMany({
+        where: { MaBaiHat: songId },
+        include: {
+          User: {
+            select: {
+              TenNguoiDung: true,
+              AvatarUrl: true
+            }
+          }
         }
-
-        const racList=racSnapshot.docs.map(doc=>{
-            const data=doc.data();
-            return{
-                creatorId: data.creatorId,
-                rate: data.rate,
-                comment:data.comment
-            };
-        });
-
-        res.status(201).json({
-            racCount:racCount,
-            racList:racList
-        });
-        // res.status(201).json({
-        //     racCount:5,
-        //     racList:[
-        //         {
-        //             creatorId: 'YenTran',
-        //             rate: 5,
-        //             comment: 'Chill.'
-        //         },
-        //         {
-        //             creatorId:'KhoaQuan',
-        //             rate: 4,
-        //             comment: 'Sleep.'
-        //         }
-        //     ]
-        // });
-        console.log({
-            songId: songId
-        })
+      });
+    
+      res.status(200).json({
+        rateAndComments: {
+          songId: songId,
+          list: rateAndComments.map(item => ({
+            id: item.MaDanhGia,
+            rate: item.MucDanhGia,
+            comment: item.BinhLuan,
+            creator: {
+              creatorName: item.User.TenNguoiDung,
+              creatorAvtUrl: item.User.AvatarUrl
+            },
+          }))
+        },
+        rateAndCommentsCount: rateAndComments.length
+      });
+  
+      console.log({ songId: songId });
+  
     } catch (error) {
         res.status(400).json({message: "Fail", error:error.message});
     }
@@ -51,26 +42,30 @@ const getRate=async(req, res)=>{
 
 //CREATE rate va comment
 const addRate=async(req, res)=>{
-    const songId=req.params.id;
+    const songId=parseInt(req.params.id,10);
     const{uid,rate, comment}=req.body;
     try {
-        await db.collection('rac').doc().set({
-            songId: songId,
-            creatorId:uid,
-            rate: rate||'0',
-            comment: comment
-        });
-        res.status(201).json({
-            message:"Success."
-        })
-        console.log({
-            songId: songId,
-            uid: uid,
-            rate: rate,
-            comment: comment
-        })
+      const createdRateAndComment = await prisma.danhGia.create({
+        data: {
+          MaBaiHat: songId,
+          MaNguoiDung: uid,
+          MucDanhGia: parseInt(rate) || 5,
+          BinhLuan: comment
+        }
+      });
+  
+      res.status(201).json({ 
+        id: createdRateAndComment.MaDanhGia,
+        songId: createdRateAndComment.MaBaiHat,
+        creator: createdRateAndComment.MaNguoiDung,
+        rate: createdRateAndComment.MucDanhGia,
+        comment: createdRateAndComment.BinhLuan
+       });
+
     } catch (error) {
-        res.status(400).json({message: "Fail.", error:error.message});
+        res.status(400).json({
+          error:error.message
+        });
     }
 }
 
