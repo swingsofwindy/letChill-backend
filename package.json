@@ -19,7 +19,7 @@
   "license": "ISC",
   "dependencies": {
     "@firebase/firestore": "^4.7.0",
-    "@prisma/client": "^6.5.0",
+    "@prisma/client": "^6.6.0",
     "axios": "^1.7.9",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
@@ -33,6 +33,6 @@
     "multer": "^1.4.5-lts.1"
   },
   "devDependencies": {
-    "prisma": "^6.5.0"
+    "prisma": "^6.6.0"
   }
 }
