@@ -1,13 +1,20 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const admin = require('firebase-admin');
+const serviceAccount = require('../serviceAccount'); 
 
-//Login
+if (!admin.apps.length) {
+  admin.initializeApp({  
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      credential: admin.credential.cert(serviceAccount)
+    });
+}
+
 const signinUser = async (req, res) => {
     const { email } = req.body;
     try {
-        await admin.auth().getUserByEmail(email);
-        res.status(200).json();
+        const user = await admin.auth().getUserByEmail(email);
+        res.status(200).json({id: user.uid });
     } catch (error) {
         res.status(400).json({
             error: error.message 

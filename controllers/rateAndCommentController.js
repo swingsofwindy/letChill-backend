@@ -69,7 +69,50 @@ const addRate=async(req, res)=>{
     }
 }
 
+const updateRate=async(req, res)=>{
+    const rateId=parseInt(req.params.id,10);
+    const{rate, comment}=req.body;
+    try {
+        const updatedRateAndComment = await prisma.danhGia.update({
+            where: { MaDanhGia: rateId },
+            data: {
+                MucDanhGia: parseInt(rate) || 5,
+                BinhLuan: comment
+            }
+        });
+        res.status(200).json({ 
+            id: updatedRateAndComment.MaDanhGia,
+            songId: updatedRateAndComment.MaBaiHat,
+            creator: updatedRateAndComment.MaNguoiDung,
+            rate: updatedRateAndComment.MucDanhGia,
+            comment: updatedRateAndComment.BinhLuan
+           });
+    } catch (error) {
+        res.status(400).json({
+          error:error.message
+        });
+    }
+}
+
+
+const deleteRate=async(req, res)=>{
+  
+    const rateId=parseInt(req.params.id,10);
+    try {
+        await prisma.danhGia.delete({
+            where: { MaDanhGia: rateId }
+        });
+        res.status(200).json();
+    } catch (error) {
+        res.status(400).json({
+          error:error.message
+        });
+    }
+}
+
 module.exports={
     getRate,
-    addRate
+    addRate,
+    updateRate,
+    deleteRate
 }
