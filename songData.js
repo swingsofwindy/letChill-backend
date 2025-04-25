@@ -2,7 +2,7 @@ const axios = require('axios');
 const { MeiliSearch } = require('meilisearch');
 
 // Khởi tạo Meilisearch Client
-const meiliClient = new MeiliSearch({ host: 'http://127.0.0.1:7700' }); 
+const meiliClient = new MeiliSearch({ host: 'http://127.0.0.1:7700' });
 const meiliIndex = meiliClient.index('songs');
 async function searchInMeilisearch(query) {
   try {
@@ -27,7 +27,7 @@ async function searchInJamendo(query) {
   try {
     const response = await axios.get("https://api.jamendo.com/v3.0/tracks", {
       params: {
-        client_id: process.env.CLIENT_ID, 
+        client_id: process.env.CLIENT_ID,
         limit: 10,
         format: "json",
         name: query
@@ -35,8 +35,8 @@ async function searchInJamendo(query) {
     });
     const songs = response.data.results;
     if (!songs) {
-      return { 
-        songs: [] 
+      return {
+        songs: []
       };
     }
 
@@ -52,10 +52,10 @@ async function searchInJamendo(query) {
           image: song.album_image,
           releaseDate: song.releasedate,
           genre: song.genre,
-          duration: song.duration, 
+          duration: song.duration,
           composer: song.composer,
           lyric: [],
-          play: 0, 
+          play: 0,
         };
 
         return enhancedSong;
@@ -85,11 +85,12 @@ async function deleteAllDocuments() {
 
 async function randomSongId() {
   try {
-    const index = meiliClient.index('songs'); 
+    const index = meiliClient.index('songs');
 
     const result = await index.getDocuments({ fields: ['id'], limit: 50 });
 
     if (result.results.length === 0) {
+      console.log("no songs")
       return null;
     }
 
@@ -98,6 +99,7 @@ async function randomSongId() {
 
     return randomSongId;
   } catch (error) {
+    console.log(error)
     return null;
   }
 }
