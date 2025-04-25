@@ -4,8 +4,8 @@ const { error } = require('firebase-functions/logger');
 const prisma = new PrismaClient();
 
 //
-const getPlaylistDetail=async (req,res)=>{
-  const playlistId=parseInt(req.params.id,10);
+const getPlaylistDetail = async (req, res) => {
+  const playlistId = parseInt(req.params.id, 10);
   try {
     const playlistById = await prisma.danhSachPhat.findUnique({
       where: { MaDanhSach: playlistId },
@@ -25,8 +25,8 @@ const getPlaylistDetail=async (req,res)=>{
     });
 
     if (!playlistById) {
-      return res.status(404).json({ 
-        error: 'PLAYLIST_NOT_FOUND', 
+      return res.status(404).json({
+        error: 'PLAYLIST_NOT_FOUND',
       });
     }
 
@@ -37,7 +37,7 @@ const getPlaylistDetail=async (req,res)=>{
         name: song.TenBaiHat,
         artist: song.NgheSi?.TenNgheSi,
         audio: song.BaiHatUrl,
-        image: song.AvatarUrl,
+        avatarUrl: song.AvatarUrl,
         releaseDate: song.NgayDang,
         genre: song.TheLoai?.TenTheLoai,
         composer: song.NhacSi?.TenNhacSi,
@@ -49,27 +49,24 @@ const getPlaylistDetail=async (req,res)=>{
     });
 
     res.status(200).json({
-        playlistResponse:{
-          id: playlistById.MaDanhSach,
-          name: playlistById.TenDanhSach,
-          avtUrl: playlistById.AvatarUrl,
-          createdAt: playlistById.NgayDang,
-          songsCount: songDetails.length,
-          songs: songDetails
-        }
-      }
-    );
+      id: playlistById.MaDanhSach,
+      name: playlistById.TenDanhSach,
+      avatarUrl: playlistById.AvatarUrl,
+      createdAt: playlistById.NgayDang,
+      songsCount: songDetails.length,
+      songs: songDetails
+    });
   } catch (error) {
-    res.status(500).json({ 
-      error: error.message 
+    res.status(500).json({
+      error: error.message
     });
   }
 }
 
 //
-const addSongToPlaylist= async (req, res)=>{
-  const playlistId=parseInt(req.params.id,10);
-  const {songId}=req.body;
+const addSongToPlaylist = async (req, res) => {
+  const playlistId = parseInt(req.params.id, 10);
+  const { songId } = req.body;
   try {
     // Kiểm tra xem playlist và bài hát có tồn tại không
     const playlist = await prisma.danhSachPhat.findUnique({
@@ -119,21 +116,21 @@ const addSongToPlaylist= async (req, res)=>{
 
     console.log({ playlistId, songId });
   } catch (error) {
-      res.status(400).json({
-          error:error.message
-      })
+    res.status(400).json({
+      error: error.message
+    })
   }
 }
 
-const deleteSongFromPlaylist= async (req, res)=>{
-  const playlistId=parseInt(req.params.id,10);
-  const {songId}=req.body;
+const deleteSongFromPlaylist = async (req, res) => {
+  const playlistId = parseInt(req.params.id, 10);
+  const { songId } = req.body;
   try {
     // Kiểm tra sự tồn tại của playlist và bài hát
     const playlist = await prisma.danhSachPhat.findUnique({
       where: { MaDanhSach: playlistId }
     });
-    if(!playlist) {
+    if (!playlist) {
       return res.status(404).json({
         error: 'PLAYLIST_NOT_FOUND'
       });
@@ -177,14 +174,14 @@ const deleteSongFromPlaylist= async (req, res)=>{
 
     console.log({ playlistId, songId });
   } catch (error) {
-      res.status(400).json({
-          error: error.message
-      })
+    res.status(400).json({
+      error: error.message
+    })
   }
 }
 
-module.exports={
-    getPlaylistDetail, 
-    addSongToPlaylist, 
-    deleteSongFromPlaylist
+module.exports = {
+  getPlaylistDetail,
+  addSongToPlaylist,
+  deleteSongFromPlaylist
 }

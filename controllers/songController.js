@@ -1,10 +1,11 @@
 const axios = require('axios');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-const {randomSongId}=require('../songData')
+const { randomSongId } = require('../songData')
 //
 const getSongById = async (req, res) => {
-  const songId = parseInt(req.params.id,10);
+  // Giá trị cần thiết
+  const songId = parseInt(req.params.id, 10);
   try {
     // Tìm bài hát trong DB trước
     let songRecord = await prisma.baiHat.findUnique({
@@ -36,9 +37,9 @@ const getSongById = async (req, res) => {
         where: { MaNgheSi: parseInt(song.artist_id, 10) },
         update: {},
         create: {
-          MaNgheSi: parseInt(song.artist_id,10),
-          TenNgheSi: song.artist_name ,
-          AvatarUrl: song.image ,
+          MaNgheSi: parseInt(song.artist_id, 10),
+          TenNgheSi: song.artist_name,
+          AvatarUrl: song.image,
         }
       });
 
@@ -68,7 +69,7 @@ const getSongById = async (req, res) => {
           MaBaiHat: songId,
           TenBaiHat: song.name,
           MaNhacSi: 1,
-          MaNgheSi: parseInt(song.artist_id,10),
+          MaNgheSi: parseInt(song.artist_id, 10),
           MaTheLoai: 1,
           MaNguoiDang: '001',
           BaiHatUrl: song.audio,
@@ -112,7 +113,7 @@ const getSongById = async (req, res) => {
 
 const createSong = async (req, res) => {
   const { uid, name, link, download, avatarUrl, releaseDate, lyric, composer, artist, genre } = req.body;
-  
+
   var artistInfo = await prisma.ngheSi.findFirst({
     where: { TenNgheSi: artist }
   });
@@ -140,7 +141,7 @@ const createSong = async (req, res) => {
   var genreInfo = await prisma.theLoai.findFirst({
     where: { TenTheLoai: genre }
   })
-  
+
   if (!genreInfo) {
     genreInfo = await prisma.theLoai.create({
       data: {
@@ -192,8 +193,8 @@ const getRandomSongId = async (req, res) => {
   try {
     const randomId = await randomSongId();
 
-    res.status(201).json({ 
-      id: randomId 
+    res.status(201).json({
+      id: randomId
     });
 
   } catch (error) {
@@ -203,8 +204,8 @@ const getRandomSongId = async (req, res) => {
   }
 };
 
-module.exports = { 
-  getSongById, 
+module.exports = {
+  getSongById,
   createSong,
-  getRandomSongId 
+  getRandomSongId
 };
