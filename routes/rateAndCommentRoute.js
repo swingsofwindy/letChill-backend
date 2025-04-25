@@ -1,5 +1,5 @@
 const express=require('express');
-const {getRate, addRate}=require('../controllers/rateAndCommentController');
+const {getRate, addRate, updateRate, deleteRate}=require('../controllers/rateAndCommentController');
 
 const router=express.Router();
 
