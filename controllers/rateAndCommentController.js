@@ -1,8 +1,43 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const Filter = require('bad-words');
+const filter = new Filter();
 
-//GET rate va comment
-const getRate=async(req, res)=>{
+const getRate = async (req, res) => {
+  try {
+    const rateAndComments = await prisma.danhGia.findMany({
+
+      include: {
+        User: {
+          select: {
+            TenNguoiDung: true,
+            AvatarUrl: true
+          }
+        }
+      }
+    });
+
+    res.status(200).json({  
+        rateAndComments: rateAndComments.map(item => ({
+          id: item.MaDanhGia,
+          songId: item.MaBaiHat,
+          creator: {
+            name: item.User.TenNguoiDung,
+            avatarUrl: item.User.AvatarUrl
+          },
+          rate: item.MucDanhGia,
+          comment: item.BinhLuan,
+        })),
+        rateAndCommentsCount: rateAndComments.length
+      });
+  } catch (error) {
+    res.status(400).json({
+      error:error.message
+    });
+  }
+}
+
+const getRateBySongId=async(req, res)=>{
     const songId=parseInt(req.params.id,10);
     try {
       const rateAndComments = await prisma.danhGia.findMany({
@@ -16,17 +51,18 @@ const getRate=async(req, res)=>{
           }
         }
       });
+      const averageRate = rateAndComments.reduce((sum, item) => sum + item.MucDanhGia, 0) / rateAndComments.length || 0;
     
       res.status(200).json({
         rateAndComments: {
-          songId: songId,
+          averageRate: averageRate,
           list: rateAndComments.map(item => ({
             id: item.MaDanhGia,
             rate: item.MucDanhGia,
             comment: item.BinhLuan,
             creator: {
-              creatorName: item.User.TenNguoiDung,
-              creatorAvtUrl: item.User.AvatarUrl
+              name: item.User.TenNguoiDung,
+              avatarUrl: item.User.AvatarUrl
             },
           }))
         },
@@ -45,6 +81,9 @@ const addRate=async(req, res)=>{
     const songId=parseInt(req.params.id,10);
     const{uid,rate, comment}=req.body;
     try {
+      if(filter.isProfane(comment)) {
+          return res.status(400).json({ error: 'Comment contains inappropriate language.' });
+        }
       const createdRateAndComment = await prisma.danhGia.create({
         data: {
           MaBaiHat: songId,
@@ -110,9 +149,17 @@ const deleteRate=async(req, res)=>{
     }
 }
 
+async function checkComment(comment) {
+  const Filter = (await import('bad-words')).default;
+  const filter = new Filter();
+  
+  return filter.isProfane(comment);
+}
+
 module.exports={
-    getRate,
-    addRate,
-    updateRate,
-    deleteRate
+  getRate,
+  getRateBySongId,
+  addRate,
+  updateRate,
+  deleteRate
 }

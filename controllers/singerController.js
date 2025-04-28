@@ -63,7 +63,7 @@ const createSinger=async (req, res)=>{
       const createdSinger = await prisma.ngheSi.create({
         data: {
           TenNgheSi: name,
-          AvatarUrl: avatarUrl || ''
+          AvatarUrl: avatarUrl
         }
       });
   

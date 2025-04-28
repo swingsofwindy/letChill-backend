@@ -120,3 +120,18 @@ model TheoDoi {
   @@id([MaNgheSi, MaNguoiDung])
 }
 
+enum PhuongThuc{
+  MOBILE_BANKING
+  PAYMENT_GATEWAY
+  E_WALLET
+}
+
+model ThanhToan {
+  MaThanhToan Int @id @default(autoincrement())
+  MaNguoiDung String
+  PhuongThuc 
+  SoTien Int
+  NgayTao DateTime
+
+  User User @relation(fields: [MaNguoiDung], references: [MaNguoiDung])
+}

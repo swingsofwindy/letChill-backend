@@ -1,9 +1,11 @@
 const express=require('express');
-const {getRate, addRate, updateRate, deleteRate}=require('../controllers/rateAndCommentController');
+const {getRate, getRateBySongId, addRate, updateRate, deleteRate}=require('../controllers/rateAndCommentController');
 
 const router=express.Router();
 
-router.get('/:id', getRate);
+router.get('/', getRate);
+
+router.get('/:id', getRateBySongId);
 
 router.post('/:id', addRate);
 
