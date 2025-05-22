@@ -1,19 +1,18 @@
 const axios=require('axios')
 const { PrismaClient } = require('@prisma/client');
+const { error } = require('firebase-functions/logger');
 const prisma = new PrismaClient();
 
 //GET thong tin nghe si
 const getSinger=async(req,res)=>{
     const artistId=parseInt(req.params.id,10);
     try {
-      // Tìm trong DB trước
       let singer = await prisma.ngheSi.findUnique({
         where: { 
           MaNgheSi: artistId,
         }
       });
   
-      // Nếu không tìm thấy, gọi Jamendo API và lưu dữ liệu có thể
       if (!singer) {
         const response = await axios.get("https://api.jamendo.com/v3.0/artists", {
           params: {
@@ -25,15 +24,14 @@ const getSinger=async(req,res)=>{
   
         const artist = response.data.results[0];
         if (!artist) {
-          return res.status(404).json({ message: "Không tìm thấy ca sĩ trong Jamendo." });
+          return res.status(404).json({ error: "SINGER_NOT_FOUND" });
         }
   
-        // Tạo mới vào DB (chỉ giữ trường hợp khớp model)
         singer = await prisma.ngheSi.create({
           data: {
             MaNgheSi: artist.id,
-            TenNgheSi: artist.name || "Unknown Artist",
-            AvatarUrl: artist.image || "",
+            TenNgheSi: artist.name,
+            AvatarUrl: artist.image
           }
         });
       }
@@ -41,19 +39,18 @@ const getSinger=async(req,res)=>{
       const followers = await prisma.theoDoi.count({
         where: { MaNgheSi: artistId }
       });
-
-      // Trả về thông tin từ DB
-      const artistInfo = {
-        MaNgheSi: singer.MaNgheSi,
-        TenNgheSi: singer.TenNgheSi,
-        AvatarUrl: singer.AvatarUrl,
-        SoNguoiTheoDoi: followers
-      };
   
-      res.status(200).json(artistInfo);
+      res.status(200).json({
+        id: singer.MaNgheSi,
+        name: singer.TenNgheSi,
+        avatarUrl: singer.AvatarUrl,
+        followers: followers
+      });
     }
     catch(error){
-        res.status(400).json({message:'Fail.', error:error.message});
+        res.status(400).json({
+          error:error.message
+        });
     }
 }
 
@@ -67,10 +64,86 @@ const createSinger=async (req, res)=>{
         }
       });
   
-      res.status(201).json({ singerId: createdSinger.MaNgheSi });
+      res.status(201).json({ 
+        id: createdSinger.MaNgheSi,
+        name: createdSinger.TenNgheSi,
+        avatarUrl: createdSinger.AvatarUrl,
+        followers: 0
+      });
     } catch (error) {
-        res.status(400).json({message:"Fail.", error:error.message});
+        res.status(400).json({
+          error:error.message
+        });
     } 
 }
 
-module.exports={getSinger, createSinger};
+const updateSinger=async (req, res)=>{
+    const artistId=parseInt(req.params.id,10);
+    const {name, avatarUrl}=req.body;
+    try {
+      const existingSinger = await prisma.ngheSi.findUnique({
+        where: { MaNgheSi: artistId }
+      });
+
+      if (!existingSinger) {
+        return res.status(404).json({ 
+          error: "SINGER_NOT_FOUND" 
+        });
+      }
+
+      const updatedSinger = await prisma.ngheSi.update({
+        where: { MaNgheSi: artistId },
+        data: {
+          TenNgheSi: name,
+          AvatarUrl: avatarUrl
+        }
+      });
+
+      const followers = await prisma.theoDoi.count({
+        where: { MaNgheSi: artistId }
+      });
+  
+      res.status(200).json({
+        id: updatedSinger.MaNgheSi,
+        name: updatedSinger.TenNgheSi,
+        avatarUrl: updatedSinger.AvatarUrl,
+        followers: followers
+      });
+    } catch (error) {
+        res.status(400).json({
+          error:error.message
+        });
+    } 
+}
+
+const deleteSinger=async (req, res)=>{
+    const artistId=parseInt(req.params.id,10);
+    try {
+      const existingSinger = await prisma.ngheSi.findUnique({
+        where: { MaNgheSi: artistId }
+      });
+
+      if (!existingSinger) {
+        return res.status(404).json({ 
+          error: "SINGER_NOT_FOUND" 
+        });
+      }
+
+      await prisma.ngheSi.delete({
+        where: { MaNgheSi: artistId }
+      });
+  
+      res.status(201).json();
+    } catch (error) {
+        res.status(400).json({
+          error:error.message
+        });
+    } 
+}
+
+module.exports={
+  getSinger, 
+  createSinger,
+  updateSinger,
+  deleteSinger
+};

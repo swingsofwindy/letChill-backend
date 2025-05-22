@@ -1,14 +1,12 @@
 const axios = require('axios');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-const { randomSongId } = require('../songData')
-//
+const { randomSongId } = require('../songData');
+
 const getSongById = async (req, res) => {
-  // Giá trị cần thiết
   const songId = parseInt(req.params.id, 10);
   try {
-    // Tìm bài hát trong DB trước
-    let songRecord = await prisma.baiHat.findUnique({
+    const songRecord = await prisma.baiHat.findUnique({
       where: { MaBaiHat: songId },
       include: {
         NgheSi: true,
@@ -17,9 +15,8 @@ const getSongById = async (req, res) => {
       }
     });
 
-    // Nếu không có thì fetch từ Jamendo
     if (!songRecord) {
-      const response = await axios.get("https://api.jamendo.com/v3.0/tracks", {
+      const songRecord = await axios.get("https://api.jamendo.com/v3.0/tracks", {
         params: {
           client_id: process.env.CLIENT_ID,
           format: 'json',
@@ -27,10 +24,9 @@ const getSongById = async (req, res) => {
           id: songId,
         },
       });
-
-      const song = response.data.results[0];
+      const song = songRecord.data.results[0];
       if (!song) {
-        return res.status(404).json({ message: "Không tìm thấy bài hát trong Jamendo." });
+        return res.status(404).json({ message: "JAMEDO_SONG_NOT_FOUND" });
       }
 
       await prisma.ngheSi.upsert({
@@ -43,7 +39,6 @@ const getSongById = async (req, res) => {
         }
       });
 
-      // Tạo bản ghi nhạc sĩ (nếu chưa có)
       await prisma.nhacSi.upsert({
         where: { MaNhacSi: 1 },
         update: {},
@@ -53,7 +48,6 @@ const getSongById = async (req, res) => {
         }
       });
 
-      // Tạo bản ghi thể loại (nếu chưa có)
       await prisma.theLoai.upsert({
         where: { MaTheLoai: 1 },
         update: {},
@@ -63,7 +57,6 @@ const getSongById = async (req, res) => {
         }
       });
 
-      // Lưu bài hát vào DB
       songRecord = await prisma.baiHat.create({
         data: {
           MaBaiHat: songId,
@@ -86,8 +79,12 @@ const getSongById = async (req, res) => {
       });
     }
 
-    // Chuẩn hóa dữ liệu trả về
-    const enhancedSong = {
+    await prisma.baiHat.update({
+      where: { MaBaiHat: songId },
+      data: { LuotNghe: songRecord.LuotNghe + 1 }
+    });
+
+    res.status(200).json({
       id: songRecord.MaBaiHat,
       name: songRecord.TenBaiHat,
       link: songRecord.BaiHatUrl,
@@ -100,9 +97,7 @@ const getSongById = async (req, res) => {
       composer: songRecord.NhacSi?.TenNhacSi,
       artist: songRecord.NgheSi?.TenNgheSi,
       genre: songRecord.TheLoai?.TenTheLoai,
-    };
-
-    res.status(200).json(enhancedSong);
+    });
 
   } catch (error) {
     res.status(400).json({
@@ -111,7 +106,7 @@ const getSongById = async (req, res) => {
   }
 }
 
-const createSong = async (req, res) => {
+const uploadSong = async (req, res) => {
   const { uid, name, link, download, avatarUrl, releaseDate, lyric, composer, artist, genre } = req.body;
 
   var artistInfo = await prisma.ngheSi.findFirst({
@@ -189,9 +184,36 @@ const createSong = async (req, res) => {
   }
 }
 
-const getRandomSongId = async (req, res) => {
+const downloadSong = async (req, res) => {
+  const songId = parseInt(req.params.id, 10);
+  try {
+    const song = await prisma.baiHat.findUnique({
+      where: { MaBaiHat: songId },
+      select: {
+        DownloadUrl: true,
+      }
+    });
+
+    if (!song) {
+      return res.status(404).json({ 
+        error: "SONG_NOT_FOUND" 
+      });
+    }
+
+    res.status(200).json({
+      link: song.DownloadUrl
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: error.message
+    });
+  }
+}
+
+const randomId = async (req, res) => {
   try {
     const randomId = await randomSongId();
+    console.log(randomId);
 
     res.status(201).json({
       id: randomId
@@ -206,6 +228,7 @@ const getRandomSongId = async (req, res) => {
 
 module.exports = {
   getSongById,
-  createSong,
-  getRandomSongId
+  uploadSong,
+  downloadSong,
+  randomId
 };

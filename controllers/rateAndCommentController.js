@@ -1,7 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
+const { default: axios } = require('axios');
+const { log } = require('firebase-functions/logger');
 const prisma = new PrismaClient();
-const Filter = require('bad-words');
-const filter = new Filter();
 
 const getRate = async (req, res) => {
   try {
@@ -38,7 +38,7 @@ const getRate = async (req, res) => {
 }
 
 const getRateBySongId=async(req, res)=>{
-    const songId=parseInt(req.params.id,10);
+    const songId=parseInt(req.query.songId,10);
     try {
       const rateAndComments = await prisma.danhGia.findMany({
         where: { MaBaiHat: songId },
@@ -76,14 +76,20 @@ const getRateBySongId=async(req, res)=>{
     }
 }
 
-//CREATE rate va comment
 const addRate=async(req, res)=>{
-    const songId=parseInt(req.params.id,10);
-    const{uid,rate, comment}=req.body;
+    const songId=parseInt(req.query.songId,10);
+    const{rate, comment}=req.body;
+    const uid=req.user.uid;
+
     try {
-      if(filter.isProfane(comment)) {
-          return res.status(400).json({ error: 'Comment contains inappropriate language.' });
-        }
+      const isToxicComment = await axios.post('http://localhost:8000/analyze_comment', {
+        comment: comment
+      });
+      
+      if(isToxicComment.data.is_toxic) {
+            return res.status(400).json({ error: 'COMMENT_CONTAINS_INAPPROPRIATE_LANGUAGE' });
+      };
+
       const createdRateAndComment = await prisma.danhGia.create({
         data: {
           MaBaiHat: songId,
@@ -110,9 +116,22 @@ const addRate=async(req, res)=>{
 
 const updateRate=async(req, res)=>{
     const rateId=parseInt(req.params.id,10);
+    const uid=req.user.uid;
     const{rate, comment}=req.body;
+
     try {
-        const updatedRateAndComment = await prisma.danhGia.update({
+      const isExistsRate = await prisma.danhGia.findUnique({
+        where: { 
+          MaDanhGia: rateId,
+          MaNguoiDung: uid
+        }
+    });
+
+    if (!isExistsRate) {
+        return res.status(404).json({ error: 'RATE_NOT_FOUND' });
+    }
+    
+    const updatedRateAndComment = await prisma.danhGia.update({
             where: { MaDanhGia: rateId },
             data: {
                 MucDanhGia: parseInt(rate) || 5,
@@ -137,7 +156,20 @@ const updateRate=async(req, res)=>{
 const deleteRate=async(req, res)=>{
   
     const rateId=parseInt(req.params.id,10);
+    const uid=req.user.uid;
+
     try {
+        const isExistsRate = await prisma.danhGia.findUnique({
+            where: { 
+              MaDanhGia: rateId,
+              MaNguoiDung: uid
+            }
+        });
+
+        if (!isExistsRate) {
+            return res.status(404).json({ error: 'RATE_NOT_FOUND' });
+        }
+
         await prisma.danhGia.delete({
             where: { MaDanhGia: rateId }
         });
@@ -147,13 +179,6 @@ const deleteRate=async(req, res)=>{
           error:error.message
         });
     }
-}
-
-async function checkComment(comment) {
-  const Filter = (await import('bad-words')).default;
-  const filter = new Filter();
-  
-  return filter.isProfane(comment);
 }
 
 module.exports={

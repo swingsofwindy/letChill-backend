@@ -15,6 +15,7 @@ datasource db {
 
 enum Role{
   USER
+  AWAIT_APPROVING
   CREATOR
   ADMIN
 }
@@ -31,6 +32,7 @@ model User {
   DanhSachPhat DanhSachPhat[]
   DanhGia      DanhGia[]
   TheoDoi      TheoDoi[]
+  DangKy       DangKy[]
 }
 
 model DanhSachPhat {
@@ -126,12 +128,20 @@ enum PhuongThuc{
   E_WALLET
 }
 
-model ThanhToan {
-  MaThanhToan Int @id @default(autoincrement())
+enum GoiDangKy{
+  WEEKLY
+  MONTHLY
+  STUDENT
+}
+
+model DangKy {
+  MaDangKy Int @id @default(autoincrement())
   MaNguoiDung String
-  PhuongThuc 
-  SoTien Int
-  NgayTao DateTime
+  Goi GoiDangKy
+  PhuongThuc PhuongThuc
+  NgayBatDau DateTime
+  NgayKetThuc DateTime
+  NgayTao DateTime @default(now())
 
   User User @relation(fields: [MaNguoiDung], references: [MaNguoiDung])
 }

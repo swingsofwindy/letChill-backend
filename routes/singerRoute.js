@@ -1,12 +1,16 @@
 const express=require('express');
-const {getSinger, createSinger}=require('../controllers/singerController');
+const authorize = require('../middlewares/authorization');
+const verifyToken = require('../middlewares/verifyToken');
+const {getSinger, createSinger, updateSinger, deleteSinger}=require('../controllers/singerController');
 
 const router=express.Router();
 
-//GET thong tin nghe si
 router.get('/:id', getSinger);
 
-//
-router.post('/',createSinger);
+router.post('/', verifyToken, authorize(['ADMIN']), createSinger);
+
+router.patch('/:id', verifyToken, authorize(['ADMIN','CREATOR']), updateSinger);
+
+router.delete('/:id', verifyToken, authorize(['ADMIN']), deleteSinger);
 
 module.exports=router;

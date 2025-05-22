@@ -10,13 +10,24 @@ if (!admin.apps.length) {
   });
 }
 
+const uid = '9sj3qdUYn5Qo28lddBzhWapzTN32'; // đặt UID tùy ý
+
+admin.auth().createCustomToken(uid)
+  .then((customToken) => {
+   // console.log('Custom token created:', customToken);
+  })
+  .catch((error) => {
+    console.error('Error creating custom token:', error);
+  });
 
 //Login
 const signinUser = async (req, res) => {
   const { email } = req.body;
   try {
-    await admin.auth().getUserByEmail(email);
-    res.status(200).json();
+    const user = await admin.auth().getUserByEmail(email);
+    res.status(200).json({
+      uid: user.uid,
+    });
   } catch (error) {
     res.status(400).json({
       error: error.message

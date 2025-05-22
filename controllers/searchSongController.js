@@ -20,7 +20,7 @@ const getListSongs = async (req, res) => {
       }))
       return res.status(200).json(
         hits
-      ); // Trả về kết quả tìm kiếm từ Meilisearch
+      );
     }
     const jamendoResult = await searchInJamendo(query);
 

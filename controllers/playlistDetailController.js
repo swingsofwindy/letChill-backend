@@ -63,14 +63,17 @@ const getPlaylistDetail = async (req, res) => {
   }
 }
 
-//
 const addSongToPlaylist = async (req, res) => {
   const playlistId = parseInt(req.params.id, 10);
-  const { songId } = req.body;
+  const uid = req.user.id;
+  const songId = req.query.songId;
+
   try {
-    // Kiểm tra xem playlist và bài hát có tồn tại không
     const playlist = await prisma.danhSachPhat.findUnique({
-      where: { MaDanhSach: playlistId }
+      where: { 
+        MaDanhSach: playlistId,
+        MaNguoiDung: uid
+      }
     });
 
     if (!playlist) {
@@ -124,12 +127,17 @@ const addSongToPlaylist = async (req, res) => {
 
 const deleteSongFromPlaylist = async (req, res) => {
   const playlistId = parseInt(req.params.id, 10);
-  const { songId } = req.body;
+  const uid = req.user.id;
+  const songId = req.query.songId;
+
   try {
-    // Kiểm tra sự tồn tại của playlist và bài hát
     const playlist = await prisma.danhSachPhat.findUnique({
-      where: { MaDanhSach: playlistId }
+      where: { 
+        MaDanhSach: playlistId,
+        MaNguoiDung: uid
+      }
     });
+
     if (!playlist) {
       return res.status(404).json({
         error: 'PLAYLIST_NOT_FOUND'
@@ -160,7 +168,7 @@ const deleteSongFromPlaylist = async (req, res) => {
         error: 'SONG_NOT_IN_PLAYLIST'
       });
     }
-    // Xoá bài hát khỏi bảng CT_DanhSachPhat (nếu tồn tại)
+
     await prisma.cT_DanhSachPhat.delete({
       where: {
         MaDanhSach_MaBaiHat: {

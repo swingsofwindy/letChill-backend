@@ -3,6 +3,7 @@ const prisma = new PrismaClient();
 //
 const getLyrics=async (req,res)=>{
     const songId=parseInt(req.params.id,10);
+
     try {
       const song = await prisma.baiHat.findUnique({
         where: { MaBaiHat: songId },
@@ -16,23 +17,24 @@ const getLyrics=async (req,res)=>{
       }
   
       res.status(200).json({ lyric: song.LoiBaiHat });
-    
     } catch (error) {
-        res.status(400).json({
-            error: error.message
-        })
+      res.status(400).json({
+          error: error.message
+      })
     }
 }
 
 const addLyrics=async (req,res)=>{
-    const {songName, newLyric}=req.body;
+    const songId=parseInt(req.params.id,10);
+    const lyric=req.body;
+
     try {
       const updated = await prisma.baiHat.updateMany({
         where: {
-          TenBaiHat: songName
+          MaBaiHat: songId
         },
         data: {
-          LoiBaiHat: newLyric
+          LoiBaiHat: lyric
         }
       });
   
@@ -44,9 +46,10 @@ const addLyrics=async (req,res)=>{
   
       res.status(201).json();
     } catch (error) {
-        res.status(400).json({
-            error:error.message
-        })
+      res.status(400).json({
+          error:error.message
+      });
     }
 }
+
 module.exports={getLyrics, addLyrics}
