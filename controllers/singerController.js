@@ -1,6 +1,5 @@
 const axios=require('axios')
 const { PrismaClient } = require('@prisma/client');
-const { error } = require('firebase-functions/logger');
 const prisma = new PrismaClient();
 
 //GET thong tin nghe si
@@ -29,7 +28,7 @@ const getSinger=async(req,res)=>{
   
         singer = await prisma.ngheSi.create({
           data: {
-            MaNgheSi: artist.id,
+            MaNgheSi: parseInt(artist.id,10),
             TenNgheSi: artist.name,
             AvatarUrl: artist.image
           }
@@ -116,6 +115,80 @@ const updateSinger=async (req, res)=>{
     } 
 }
 
+const getSongsByArtist = async (req, res) => {
+  const artistId = parseInt(req.params.singerId);
+
+  try {
+    const artist = await prisma.ngheSi.findUnique({
+      where: { MaNgheSi: artistId },
+    });
+    const postgresSongs = await prisma.baiHat.findMany({
+      where: {
+        MaNgheSi: artistId,
+      },
+      select: {
+        MaBaiHat: true,
+        TenBaiHat: true,
+        AvatarUrl: true,
+      },
+    });
+
+    const formattedPostgresSongs = postgresSongs.map(song => ({
+      id: song.MaBaiHat,
+      name: song.TenBaiHat,
+      avatarUrl: song.AvatarUrl,
+    }));
+
+    const jamendoArtist = await axios.get("https://api.jamendo.com/v3.0/artists",{
+      params: {
+        client_id: process.env.CLIENT_ID,
+        format: "json",
+        limit: 1,
+        artist_id: artistId,
+      },
+    })
+
+    if(jamendoArtist.data.results[0]==0)
+      return res.status(201).json(
+        formattedPostgresSongs
+      );
+
+    const jamendoResponse = await axios.get("https://api.jamendo.com/v3.0/tracks", {
+      params: {
+        client_id: "206f7c22",
+        format: "json",
+        limit: 20,
+        order: "popularity_total",
+        artist_id: artistId, // dùng tên ca sĩ để tìm
+      },
+    });
+
+    const jamendoTracks = jamendoResponse.data.results.map(track => ({
+      id: parseInt(track.id),
+      name: track.name,
+      avatarUrl: track.image,
+    }));
+
+    const allSongs = [...formattedPostgresSongs, ...jamendoTracks];
+
+    console.log("All songs:", allSongs);
+
+    return res.status(200).json(
+      {
+        artist: {
+          id: jamendoArtist.data.results[0].id,
+          name: jamendoArtist.data.results[0].name,
+          avatarUrl: jamendoArtist.data.results[0].image
+        },
+        songs: allSongs
+      });
+
+  } catch (error) {
+    console.error("Error fetching songs:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 const deleteSinger=async (req, res)=>{
     const artistId=parseInt(req.params.id,10);
     try {
@@ -141,9 +214,61 @@ const deleteSinger=async (req, res)=>{
     } 
 }
 
+// POST /follows
+const addFollowSinger = async (req, res) => {
+  const uid = req.params.uid;
+  const singerId = parseInt(req.params.id, 10);
+  try {
+    const follow= await prisma.theoDoi.findUnique({
+      where: {
+        MaNgheSi_MaNguoiDung: {
+          MaNguoiDung: uid,
+          MaNgheSi: singerId,
+        },
+      },
+    });
+    if (follow) {
+      return res.status(400).json({ error: "ALREADY_FOLLOWING" });
+    }
+    await prisma.theoDoi.create({
+      data: {
+        MaNguoiDung: uid,
+        MaNgheSi: singerId,
+      },
+    });
+    res.status(201).json();
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+// DELETE /follows
+const removeFollowSinger = async (req, res) => {
+  const singerId = parseInt(req.params.id, 10);
+  const uid = req.params.uid;
+
+  try {
+    await prisma.theoDoi.delete({
+      where: {
+        MaNgheSi_MaNguoiDung: {
+          MaNguoiDung: uid,
+          MaNgheSi: singerId,
+        },
+      },
+    });
+    res.status(201).json();
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+
 module.exports={
   getSinger, 
   createSinger,
   updateSinger,
-  deleteSinger
+  deleteSinger,
+  getSongsByArtist,
+  addFollowSinger,
+  removeFollowSinger
 };

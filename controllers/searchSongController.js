@@ -1,4 +1,6 @@
-const { searchInMeilisearch, searchInJamendo } = require('../songData');
+const { searchInMeilisearch, searchInJamendo, searchInPostgres } = require('../songData');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 const getListSongs = async (req, res) => {
   const query = req.query.query;
@@ -18,10 +20,32 @@ const getListSongs = async (req, res) => {
         composer: hit.composer,
         play: hit.play
       }))
+      
       return res.status(200).json(
         hits
       );
     }
+
+    const postgresResult = await searchInPostgres(query, prisma);
+    if (postgresResult) {
+      const hits = postgresResult.map((song) => ({
+        id: song.id,
+        name: song.name,
+        artist: song.artist,
+        avatarUrl: song.image,
+        link: song.audio,
+        lyric: song.lyric,
+        releaseDate: song.releaseDate,
+        genre: song.genre,
+        composer: song.composer,
+        play: song.play
+      }))
+
+      return res.status(200).json(
+        hits
+      );
+    }
+    
     const jamendoResult = await searchInJamendo(query);
 
     if (jamendoResult) {

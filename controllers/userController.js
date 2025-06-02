@@ -37,16 +37,11 @@ const signinUser = async (req, res) => {
 
 //Signup
 const signupUser = async (req, res) => {
-  const { email, password, name, birth, gender } = req.body;
+  const { uid, email, name, birth, gender } = req.body;
   try {
-    const createdFBUser = await admin.auth().createUser({
-      email: email,
-      password: password
-    });
-
-    const createdDBUser = await prisma.user.create({
+    await prisma.user.create({
       data: {
-        MaNguoiDung: createdFBUser.uid,
+        MaNguoiDung: uid,
         Email: email,
         TenNguoiDung: name,
         NgaySinh: new Date(birth),
@@ -55,17 +50,10 @@ const signupUser = async (req, res) => {
         Role: "USER" // Có thể thêm quyền mặc định nếu cần
       }
     });
-
-    if (!createdDBUser) {
-      await admin.auth().deleteUser(createdFBUser.uid);
-      return res.status(400).json({
-        error: error.message
-      });
-    }
     // Tạo playlist mặc định
     const createdUserPlaylist = await prisma.danhSachPhat.create({
       data: {
-        MaNguoiDung: createdFBUser.uid,
+        MaNguoiDung: uid,
         TenDanhSach: 'Danh sách yêu thích',
         AvatarUrl: 'https://res.cloudinary.com/di4kdlfr3/image/upload/v1736137850/qy5yxyvmevh36ndg1dj7.jpg',
         NgayDang: new Date().toISOString() // Ngày hiện tại
@@ -74,7 +62,6 @@ const signupUser = async (req, res) => {
 
     if (!createdUserPlaylist) {
       await prisma.user.delete({ where: { MaNguoiDung: userRecord.uid } });
-      await admin.auth().deleteUser(createdFBUser.uid);
       return res.status(400).json({
         error: error.message
       });
@@ -87,5 +74,7 @@ const signupUser = async (req, res) => {
     });
   }
 }
+
+
 
 module.exports = { signinUser, signupUser }

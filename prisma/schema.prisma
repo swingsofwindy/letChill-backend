@@ -33,6 +33,7 @@ model User {
   DanhGia      DanhGia[]
   TheoDoi      TheoDoi[]
   DangKy       DangKy[]
+  TienDoNghe    TienDoNghe[]
 }
 
 model DanhSachPhat {
@@ -76,8 +77,20 @@ model BaiHat {
   TheLoai    TheLoai @relation(fields: [MaTheLoai], references: [MaTheLoai])
   NgheSi     NgheSi @relation(fields: [MaNgheSi], references: [MaNgheSi])
   DanhGia    DanhGia[]
-
   CT_DanhSachPhat CT_DanhSachPhat[]
+  TienDoNghe TienDoNghe[]
+}
+
+model TienDoNghe {
+  MaNguoiDung String
+  MaBaiHat    Int
+  TienDo      Int     // Giây, phần trăm, hoặc bất kỳ đơn vị nào bạn chọn
+  ThoiGianCapNhat DateTime @default(now())
+
+  User    User   @relation(fields: [MaNguoiDung], references: [MaNguoiDung])
+  BaiHat  BaiHat @relation(fields: [MaBaiHat], references: [MaBaiHat])
+
+  @@id([MaNguoiDung, MaBaiHat])
 }
 
 model NhacSi {

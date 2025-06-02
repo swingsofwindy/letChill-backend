@@ -4,22 +4,24 @@ const { MeiliSearch } = require('meilisearch');
 // Khởi tạo Meilisearch Client
 const meiliClient = new MeiliSearch({ host: 'http://127.0.0.1:7700' });
 const meiliIndex = meiliClient.index('songs');
+
+
 async function searchInMeilisearch(query) {
   try {
-
-    const searchResult = await meiliIndex.search(query, {
-      attributesToSearchOn: ['name', 'artist', 'lyric'],
+    await meiliIndex.updateSearchableAttributes([
+      'name',
+      'artist',
+      'lyric',
+      'composer',
+      'genre'
+    ]);
+   const searchResult = await meiliIndex.search(query, {
       matchingStrategy: 'all',
       limit: 10,
     });
-
-    if (searchResult.hits.length > 0) {
-
-      return searchResult;
-    }
-    return null;
+    return searchResult.hits.length > 0 ? searchResult : [];
   } catch (error) {
-    return null;
+    return [];
   }
 }
 
@@ -78,6 +80,43 @@ async function searchMeilisearch() {
   }
 }
 
+async function searchInPostgres(query, prisma) {
+  const songs = await prisma.baiHat.findMany({
+    where: {
+      OR: [
+        { NgheSi: { TenNgheSi: { contains: query, mode: "insensitive" } } },
+        { NhacSi: { TenNhacSi: { contains: query, mode: "insensitive" } } },
+        { TheLoai: { TenTheLoai: { contains: query, mode: "insensitive" } } },
+      ],
+    },
+    include: {
+      NgheSi: true,
+      NhacSi: true,
+      TheLoai: true,
+    },
+    take: 10,
+  });
+
+  const formatted = songs.map(song => ({
+    id: song.MaBaiHat,
+    name: song.TenBaiHat,
+    artist: song.NgheSi?.TenNgheSi,
+    composer: song.NhacSi?.TenNhacSi,
+    genre: song.TheLoai?.TenTheLoai,
+    avatarUrl: song.AvatarUrl,
+    releaseDate: song.NgayDang,
+    play: song.LuotNghe,
+    lyric: song.LoiBaiHat || [],
+  }));
+
+  // Index vào Meili nếu muốn
+  if (formatted.length > 0) {
+    await meiliIndex.addDocuments(formatted);
+  }
+
+  return formatted;
+}
+
 async function deleteAllDocuments() {
   const index = meiliClient.index('songs');
   await index.deleteAllDocuments();
@@ -109,6 +148,7 @@ module.exports = {
   searchInMeilisearch,
   searchInJamendo,
   searchMeilisearch,
+  searchInPostgres,
   deleteAllDocuments,
   randomSongId
 }
