@@ -43,7 +43,7 @@ const updatePlaylist = async (req, res) => {
 
   try {
     const updatedPlaylist = await prisma.danhSachPhat.update({
-      where: { 
+      where: {
         MaDanhSach: playlistId,
         MaNguoiDung: uid
       },
@@ -70,7 +70,7 @@ const updatePlaylist = async (req, res) => {
 }
 
 const createPlaylist = async (req, res) => {
-  const uid = parseInt(req.query.uid, 10);
+  const uid = req.query.uid;
   const { name, avatarUrl } = req.body;
   try {
 

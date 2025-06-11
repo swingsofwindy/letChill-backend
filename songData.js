@@ -15,11 +15,11 @@ async function searchInMeilisearch(query) {
       'composer',
       'genre'
     ]);
-   const searchResult = await meiliIndex.search(query, {
+    const searchResult = await meiliIndex.search(query, {
       matchingStrategy: 'all',
       limit: 10,
     });
-    return searchResult.hits.length > 0 ? searchResult : [];
+    return searchResult.hits.length > 0 ? searchResult : null;
   } catch (error) {
     return [];
   }

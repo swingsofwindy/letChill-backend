@@ -30,8 +30,8 @@ const getProfile = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(404).json({ 
-        error: "USER_NOT_FOUND" 
+      return res.status(404).json({
+        error: "USER_NOT_FOUND"
       });
     }
 
@@ -69,7 +69,7 @@ const updateProfile = async (req, res) => {
       where: { MaNguoiDung: uid },
       data: {
         TenNguoiDung: name,
-        Role: avatarUrl
+        AvatarUrl: avatarUrl
       }
     });
 

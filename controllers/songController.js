@@ -16,8 +16,9 @@ const getSongById = async (req, res) => {
         TienDoNghe: {
           select: {
             TienDo: true,
-        },
-      }}
+          },
+        }
+      }
     });
 
     if (!songRecord) {
@@ -34,29 +35,30 @@ const getSongById = async (req, res) => {
         return res.status(404).json({ message: "JAMEDO_SONG_NOT_FOUND" });
       }
 
-    const jamendoArtist = await axios.get("https://api.jamendo.com/v3.0/artists",{
-      params: {
-        client_id: process.env.CLIENT_ID,
-        format: "json",
-        limit: 1,
-        artist_id: song.artist_id,
-      },
-    })
 
-    if (!jamendoArtist.data.results) {
-      res.status(404).json({ message: "JAMEDO_ARTIST_NOT_FOUND" });
-    }
+      const jamendoArtist = await axios.get("https://api.jamendo.com/v3.0/artists", {
+        params: {
+          client_id: process.env.CLIENT_ID,
+          format: "json",
+          limit: 1,
+          id: song.artist_id,
+        },
+      })
 
-    const artist = await prisma.ngheSi.upsert({
-      where: { MaNgheSi: parseInt(jamendoArtist.data.results[0].id, 10) },
-      update: {},
-      create: {
-        MaNgheSi: parseInt(jamendoArtist.data.results[0].id, 10),
-        TenNgheSi: jamendoArtist.data.results[0].name,
-        AvatarUrl: jamendoArtist.data.results[0].image,
+      if (!jamendoArtist.data.results) {
+        return res.status(404).json({ message: "JAMEDO_ARTIST_NOT_FOUND" }); // <-- add return here
       }
-    });
-    
+
+      const artist = await prisma.ngheSi.upsert({
+        where: { MaNgheSi: parseInt(jamendoArtist.data.results[0].id, 10) },
+        update: {},
+        create: {
+          MaNgheSi: parseInt(jamendoArtist.data.results[0].id, 10),
+          TenNgheSi: jamendoArtist.data.results[0].name,
+          AvatarUrl: jamendoArtist.data.results[0].image,
+        }
+      });
+
       await prisma.nhacSi.upsert({
         where: { MaNhacSi: 1 },
         update: {},
@@ -82,12 +84,13 @@ const getSongById = async (req, res) => {
           MaNhacSi: 1,
           MaNgheSi: artist.MaNgheSi,
           MaTheLoai: 1,
-          MaNguoiDang: '001',
+          MaNguoiDang: "",
           BaiHatUrl: song.audio,
           DownloadUrl: song.audiodownload,
           AvatarUrl: song.image,
           NgayDang: new Date(song.releasedate),
           LuotNghe: 0,
+          TienDo: song.duration,
         },
         include: {
           NgheSi: true,
@@ -95,14 +98,15 @@ const getSongById = async (req, res) => {
           TheLoai: true
         }
       });
-      res.status(200).json({
+
+      return res.status(200).json({
         id: songResponse.MaBaiHat,
         name: songResponse.TenBaiHat,
         link: songResponse.BaiHatUrl,
         download: songResponse.DownloadUrl,
         avatarUrl: songResponse.AvatarUrl,
         releaseDate: songResponse.NgayDang,
-        plays: songResponse.LuotNghe, 
+        plays: songResponse.LuotNghe,
         lyric: songResponse.LoiBaiHat,
         duration: songResponse.TienDo,
         progress: songResponse.TienDoNghe?.find(p => p.MaNguoiDung === uid)?.TienDo || 0,
@@ -117,7 +121,7 @@ const getSongById = async (req, res) => {
       data: { LuotNghe: songRecord.LuotNghe + 1 }
     });
     console.log(songRecord.TienDoNghe);
-    
+
     res.status(200).json({
       id: songRecord.MaBaiHat,
       name: songRecord.TenBaiHat,
@@ -133,6 +137,7 @@ const getSongById = async (req, res) => {
       artist: songRecord.NgheSi?.TenNgheSi,
       genre: songRecord.TheLoai?.TenTheLoai,
     });
+
 
   } catch (error) {
     res.status(400).json({
@@ -247,8 +252,8 @@ const downloadSong = async (req, res) => {
     }
 
     if (!song) {
-      return res.status(404).json({ 
-        error: "SONG_NOT_FOUND" 
+      return res.status(404).json({
+        error: "SONG_NOT_FOUND"
       });
     }
 

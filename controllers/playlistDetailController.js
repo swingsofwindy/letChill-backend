@@ -66,11 +66,11 @@ const getPlaylistDetail = async (req, res) => {
 const addSongToPlaylist = async (req, res) => {
   const playlistId = parseInt(req.params.id, 10);
   const uid = req.user.id;
-  const songId = req.query.songId;
+  const songId = parseInt(req.query.songId, 10);
 
   try {
     const playlist = await prisma.danhSachPhat.findUnique({
-      where: { 
+      where: {
         MaDanhSach: playlistId,
         MaNguoiDung: uid
       }
@@ -132,7 +132,7 @@ const deleteSongFromPlaylist = async (req, res) => {
 
   try {
     const playlist = await prisma.danhSachPhat.findUnique({
-      where: { 
+      where: {
         MaDanhSach: playlistId,
         MaNguoiDung: uid
       }

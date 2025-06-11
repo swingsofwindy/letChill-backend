@@ -20,10 +20,13 @@ const getListSongs = async (req, res) => {
         composer: hit.composer,
         play: hit.play
       }))
-      
-      return res.status(200).json(
-        hits
-      );
+
+      if (hits) {
+        return res.status(200).json(
+          hits
+        );
+      }
+
     }
 
     const postgresResult = await searchInPostgres(query, prisma);
@@ -41,11 +44,13 @@ const getListSongs = async (req, res) => {
         play: song.play
       }))
 
-      return res.status(200).json(
-        hits
-      );
+      if (hits) {
+        return res.status(200).json(
+          hits
+        );
+      }
     }
-    
+
     const jamendoResult = await searchInJamendo(query);
 
     if (jamendoResult) {
@@ -62,9 +67,11 @@ const getListSongs = async (req, res) => {
         play: song.play
       }))
 
-      return res.status(200).json(
-        hits
-      );
+      if (hits) {
+        return res.status(200).json(
+          hits
+        );
+      }
     }
 
     return res.status(404).json({

@@ -2,6 +2,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const admin = require('firebase-admin');
 const serviceAccount = require("../serviceAccountKey.json");
+const axios = require('axios');
 
 if (!admin.apps.length) {
   admin.initializeApp({
@@ -10,23 +11,40 @@ if (!admin.apps.length) {
   });
 }
 
-const uid = '9sj3qdUYn5Qo28lddBzhWapzTN32'; // đặt UID tùy ý
+// const uid = 'RFxF2oSzqZgWw1IFgbdSawJeEiX2'; // đặt UID tùy ý
 
-admin.auth().createCustomToken(uid)
-  .then((customToken) => {
-   // console.log('Custom token created:', customToken);
-  })
-  .catch((error) => {
-    console.error('Error creating custom token:', error);
-  });
+// admin.auth().createCustomToken(uid)
+//   .then((customToken) => {
+//     console.log('Custom token created:', customToken);
+//   })
+//   .catch((error) => {
+//     console.error('Error creating custom token:', error);
+//   });
 
 //Login
 const signinUser = async (req, res) => {
-  const { email } = req.body;
+  const uid = req.body.uid;
   try {
-    const user = await admin.auth().getUserByEmail(email);
+    const customToken = await admin.auth().createCustomToken(uid);
+    console.log('Custom token created:', customToken);
+
+    const response = await axios.post(
+      `https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${process.env.FIREBASE_API_KEY}`,
+      {
+        token: customToken,
+        returnSecureToken: true
+      }
+    );
+    // console.log(token.data);
+    const user = await prisma.user.findUnique({
+      where: { MaNguoiDung: uid },
+      select: {
+        Role: true
+      }
+    });
     res.status(200).json({
-      uid: user.uid,
+      token: response.data,
+      role: user.Role,
     });
   } catch (error) {
     res.status(400).json({
