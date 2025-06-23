@@ -10,7 +10,7 @@ const getSongDetails = async (songId) => {
         id: songId,
       },
     });
-    return res.data.results[0].avatarUrl || null;
+    return res.data.results[0].image || null;
   } catch {
     return null;
   }
@@ -24,7 +24,7 @@ const getArtistAvatar = async (artistId) => {
         id: artistId,
       },
     });
-    return res.data.results[0].avatarUrl || null;
+    return res.data.results[0].image || null;
   } catch {
     return null;
   }
@@ -71,7 +71,6 @@ const getDashboard = async (req, res) => {
       songs.map(async (song) => ({
         ...song,
         avatar_url: await getSongDetails(song.song_id),
-        avatarUrl: song.avatarUrl,
         name: song.name,
         artist_avatar_url: await getArtistAvatar(song.artist_id),
       }))
@@ -89,7 +88,6 @@ const getDashboard = async (req, res) => {
       ratedSongs.map(async (song) => ({
         ...song,
         avatar_url: await getSongDetails(song.song_id),
-        avatarUrl: song.avatarUrl,
         name: song.name,
         artist_avatar_url: await getArtistAvatar(song.artist_id || null),
       }))

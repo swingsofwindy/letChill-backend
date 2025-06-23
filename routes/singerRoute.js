@@ -2,11 +2,13 @@ const express=require('express');
 const authorize = require('../middlewares/authorization');
 const verifyToken = require('../middlewares/verifyToken');
 const { getSinger, createSinger, updateSinger, deleteSinger,
-        getSongsByArtist, addFollowSinger, removeFollowSinger}=require('../controllers/singerController');
+    getSongsByArtist, addFollowSinger, removeFollowSinger, getAllSingers }=require('../controllers/singerController');
 
 const router=express.Router();
 
 router.get('/:id', getSinger);
+
+router.get('/', getAllSingers);
 
 router.post('/', verifyToken, authorize(['ADMIN']), createSinger);
 
