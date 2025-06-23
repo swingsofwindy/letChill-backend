@@ -72,7 +72,7 @@ model BaiHat {
   NgayDang   DateTime
   LuotNghe   Int
   TienDo     Int?
-
+  TraPhi String @default("false")
   NhacSi     NhacSi @relation(fields: [MaNhacSi], references: [MaNhacSi])
   TheLoai    TheLoai @relation(fields: [MaTheLoai], references: [MaTheLoai])
   NgheSi     NgheSi @relation(fields: [MaNgheSi], references: [MaNgheSi])

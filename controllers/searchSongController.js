@@ -44,6 +44,8 @@ const getListSongs = async (req, res) => {
         play: song.play
       }))
 
+      console.log(hits);
+
       if (hits) {
         return res.status(200).json(
           hits

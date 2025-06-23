@@ -1,118 +1,154 @@
-const axios=require('axios')
+const axios = require('axios')
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 //GET thong tin nghe si
-const getSinger=async(req,res)=>{
-    const artistId=parseInt(req.params.id,10);
-    try {
-      let singer = await prisma.ngheSi.findUnique({
-        where: { 
-          MaNgheSi: artistId,
-        }
-      });
-  
-      if (!singer) {
-        const response = await axios.get("https://api.jamendo.com/v3.0/artists", {
-          params: {
-            client_id: process.env.CLIENT_ID,
-            format: 'json',
-            id: artistId,
-          },
-        });
-  
-        const artist = response.data.results[0];
-        if (!artist) {
-          return res.status(404).json({ error: "SINGER_NOT_FOUND" });
-        }
-  
-        singer = await prisma.ngheSi.create({
-          data: {
-            MaNgheSi: parseInt(artist.id,10),
-            TenNgheSi: artist.name,
-            AvatarUrl: artist.image
-          }
-        });
+const getSinger = async (req, res) => {
+  const artistId = parseInt(req.params.id, 10);
+  try {
+    let singer = await prisma.ngheSi.findUnique({
+      where: {
+        MaNgheSi: artistId,
       }
-      
-      const followers = await prisma.theoDoi.count({
-        where: { MaNgheSi: artistId }
-      });
-  
-      res.status(200).json({
-        id: singer.MaNgheSi,
-        name: singer.TenNgheSi,
-        avatarUrl: singer.AvatarUrl,
-        followers: followers
-      });
-    }
-    catch(error){
-        res.status(400).json({
-          error:error.message
-        });
-    }
-}
+    });
 
-const createSinger=async (req, res)=>{
-    const {name, avatarUrl}=req.body;
-    try {
-      const createdSinger = await prisma.ngheSi.create({
-        data: {
-          TenNgheSi: name,
-          AvatarUrl: avatarUrl
-        }
-      });
-  
-      res.status(201).json({ 
-        id: createdSinger.MaNgheSi,
-        name: createdSinger.TenNgheSi,
-        avatarUrl: createdSinger.AvatarUrl,
-        followers: 0
-      });
-    } catch (error) {
-        res.status(400).json({
-          error:error.message
-        });
-    } 
-}
-
-const updateSinger=async (req, res)=>{
-    const artistId=parseInt(req.params.id,10);
-    const {name, avatarUrl}=req.body;
-    try {
-      const existingSinger = await prisma.ngheSi.findUnique({
-        where: { MaNgheSi: artistId }
+    if (!singer) {
+      const response = await axios.get("https://api.jamendo.com/v3.0/artists", {
+        params: {
+          client_id: process.env.CLIENT_ID,
+          format: 'json',
+          id: artistId,
+        },
       });
 
-      if (!existingSinger) {
-        return res.status(404).json({ 
-          error: "SINGER_NOT_FOUND" 
-        });
+      const artist = response.data.results[0];
+      if (!artist) {
+        return res.status(404).json({ error: "SINGER_NOT_FOUND" });
       }
 
-      const updatedSinger = await prisma.ngheSi.update({
-        where: { MaNgheSi: artistId },
+      singer = await prisma.ngheSi.create({
         data: {
-          TenNgheSi: name,
-          AvatarUrl: avatarUrl
+          MaNgheSi: parseInt(artist.id, 10),
+          TenNgheSi: artist.name,
+          AvatarUrl: artist.image
         }
       });
+    }
 
-      const followers = await prisma.theoDoi.count({
-        where: { MaNgheSi: artistId }
+    const followers = await prisma.theoDoi.count({
+      where: { MaNgheSi: artistId }
+    });
+
+    res.status(200).json({
+      id: singer.MaNgheSi,
+      name: singer.TenNgheSi,
+      avatarUrl: singer.AvatarUrl,
+      followers: followers
+    });
+  }
+  catch (error) {
+    res.status(400).json({
+      error: error.message
+    });
+  }
+}
+
+const getAllSingers = async (req, res) => {
+  try {
+    const singers = await prisma.ngheSi.findMany();
+
+    // Nếu muốn trả về số followers cho từng nghệ sĩ:
+    // const singersWithFollowers = await Promise.all(
+    //   singers.map(async (singer) => {
+    //     const followers = await prisma.theoDoi.count({
+    //       where: { MaNgheSi: singer.MaNgheSi }
+    //     });
+    //     return {
+    //       id: singer.MaNgheSi,
+    //       name: singer.TenNgheSi,
+    //       avatarUrl: singer.AvatarUrl,
+    //       followers
+    //     };
+    //   })
+    // );
+    // return res.status(200).json(singersWithFollowers);
+
+    // Nếu chỉ trả về thông tin cơ bản:
+    const result = singers.map(singer => ({
+      id: singer.MaNgheSi,
+      name: singer.TenNgheSi,
+      avatarUrl: singer.AvatarUrl,
+      songCount: singer.baiHat.length,
+    }));
+
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(400).json({
+      error: error.message
+    });
+  }
+};
+
+const createSinger = async (req, res) => {
+  const { name, avatarUrl } = req.body;
+  try {
+    const createdSinger = await prisma.ngheSi.create({
+      data: {
+        TenNgheSi: name,
+        AvatarUrl: avatarUrl
+      }
+    });
+
+    res.status(201).json({
+      id: createdSinger.MaNgheSi,
+      name: createdSinger.TenNgheSi,
+      avatarUrl: createdSinger.AvatarUrl,
+      followers: 0
+    });
+  } catch (error) {
+    res.status(400).json({
+      error: error.message
+    });
+  }
+}
+
+const updateSinger = async (req, res) => {
+  const artistId = parseInt(req.params.id, 10);
+  const { name, avatarUrl } = req.body;
+  try {
+    const existingSinger = await prisma.ngheSi.findUnique({
+      where: { MaNgheSi: artistId }
+    });
+
+    if (!existingSinger) {
+      return res.status(404).json({
+        error: "SINGER_NOT_FOUND"
       });
-  
-      res.status(200).json({
-        id: updatedSinger.MaNgheSi,
-        name: updatedSinger.TenNgheSi,
-        avatarUrl: updatedSinger.AvatarUrl,
-        followers: followers
-      });
-    } catch (error) {
-        res.status(400).json({
-          error:error.message
-        });
-    } 
+    }
+
+    const updatedSinger = await prisma.ngheSi.update({
+      where: { MaNgheSi: artistId },
+      data: {
+        TenNgheSi: name,
+        AvatarUrl: avatarUrl
+      }
+    });
+
+    const followers = await prisma.theoDoi.count({
+      where: { MaNgheSi: artistId }
+    });
+
+    res.status(200).json({
+      id: updatedSinger.MaNgheSi,
+      name: updatedSinger.TenNgheSi,
+      avatarUrl: updatedSinger.AvatarUrl,
+      followers: followers
+    });
+  } catch (error) {
+    res.status(400).json({
+      error: error.message
+    });
+  }
 }
 
 const getSongsByArtist = async (req, res) => {
@@ -130,6 +166,7 @@ const getSongsByArtist = async (req, res) => {
         MaBaiHat: true,
         TenBaiHat: true,
         AvatarUrl: true,
+        NgayDang: true,
       },
     });
 
@@ -137,18 +174,19 @@ const getSongsByArtist = async (req, res) => {
       id: song.MaBaiHat,
       name: song.TenBaiHat,
       avatarUrl: song.AvatarUrl,
+      releaseDay: song.NgayDang,
     }));
 
-    const jamendoArtist = await axios.get("https://api.jamendo.com/v3.0/artists",{
+    const jamendoArtist = await axios.get("https://api.jamendo.com/v3.0/artists", {
       params: {
         client_id: process.env.CLIENT_ID,
         format: "json",
         limit: 1,
-        artist_id: artistId,
+        id: artistId,
       },
     })
 
-    if(jamendoArtist.data.results[0]==0)
+    if (jamendoArtist.data.results[0] == 0)
       return res.status(201).json(
         formattedPostgresSongs
       );
@@ -167,11 +205,15 @@ const getSongsByArtist = async (req, res) => {
       id: parseInt(track.id),
       name: track.name,
       avatarUrl: track.image,
+      releaseDay: track.releasedate,
     }));
+
+    console.log(jamendoTracks);
+    console.log(formattedPostgresSongs)
 
     const allSongs = [...formattedPostgresSongs, ...jamendoTracks];
 
-    console.log("All songs:", allSongs);
+    // console.log("All songs:", allSongs);
 
     return res.status(200).json(
       {
@@ -189,29 +231,29 @@ const getSongsByArtist = async (req, res) => {
   }
 };
 
-const deleteSinger=async (req, res)=>{
-    const artistId=parseInt(req.params.id,10);
-    try {
-      const existingSinger = await prisma.ngheSi.findUnique({
-        where: { MaNgheSi: artistId }
-      });
+const deleteSinger = async (req, res) => {
+  const artistId = parseInt(req.params.id, 10);
+  try {
+    const existingSinger = await prisma.ngheSi.findUnique({
+      where: { MaNgheSi: artistId }
+    });
 
-      if (!existingSinger) {
-        return res.status(404).json({ 
-          error: "SINGER_NOT_FOUND" 
-        });
-      }
-
-      await prisma.ngheSi.delete({
-        where: { MaNgheSi: artistId }
+    if (!existingSinger) {
+      return res.status(404).json({
+        error: "SINGER_NOT_FOUND"
       });
-  
-      res.status(201).json();
-    } catch (error) {
-        res.status(400).json({
-          error:error.message
-        });
-    } 
+    }
+
+    await prisma.ngheSi.delete({
+      where: { MaNgheSi: artistId }
+    });
+
+    res.status(201).json();
+  } catch (error) {
+    res.status(400).json({
+      error: error.message
+    });
+  }
 }
 
 // POST /follows
@@ -219,7 +261,7 @@ const addFollowSinger = async (req, res) => {
   const uid = req.params.uid;
   const singerId = parseInt(req.params.id, 10);
   try {
-    const follow= await prisma.theoDoi.findUnique({
+    const follow = await prisma.theoDoi.findUnique({
       where: {
         MaNgheSi_MaNguoiDung: {
           MaNguoiDung: uid,
@@ -263,12 +305,13 @@ const removeFollowSinger = async (req, res) => {
 };
 
 
-module.exports={
-  getSinger, 
+module.exports = {
+  getSinger,
   createSinger,
   updateSinger,
   deleteSinger,
   getSongsByArtist,
   addFollowSinger,
-  removeFollowSinger
+  removeFollowSinger,
+  getAllSingers,
 };

@@ -21,7 +21,7 @@ async function searchInMeilisearch(query) {
     });
     return searchResult.hits.length > 0 ? searchResult : null;
   } catch (error) {
-    return [];
+    return null;
   }
 }
 
@@ -38,7 +38,7 @@ async function searchInJamendo(query) {
     const songs = response.data.results;
     if (!songs) {
       return {
-        songs: []
+        songs: null
       };
     }
 
@@ -103,7 +103,7 @@ async function searchInPostgres(query, prisma) {
     artist: song.NgheSi?.TenNgheSi,
     composer: song.NhacSi?.TenNhacSi,
     genre: song.TheLoai?.TenTheLoai,
-    avatarUrl: song.AvatarUrl,
+    image: song.AvatarUrl,
     releaseDate: song.NgayDang,
     play: song.LuotNghe,
     lyric: song.LoiBaiHat || [],
@@ -120,6 +120,12 @@ async function searchInPostgres(query, prisma) {
 async function deleteAllDocuments() {
   const index = meiliClient.index('songs');
   await index.deleteAllDocuments();
+}
+
+async function addDocuments(song) {
+  const index = meiliClient.index('songs');
+  const result = await index.addDocuments(song);
+  console.log(result);
 }
 
 async function randomSongId() {
@@ -150,5 +156,6 @@ module.exports = {
   searchMeilisearch,
   searchInPostgres,
   deleteAllDocuments,
-  randomSongId
+  randomSongId,
+  addDocuments,
 }

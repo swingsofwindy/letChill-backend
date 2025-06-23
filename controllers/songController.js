@@ -1,7 +1,8 @@
 const axios = require('axios');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-const { randomSongId } = require('../songData');
+const { randomSongId, addDocuments } = require('../songData');
+
 
 const getSongById = async (req, res) => {
   const songId = parseInt(req.params.id, 10);
@@ -10,7 +11,13 @@ const getSongById = async (req, res) => {
     const songRecord = await prisma.baiHat.findUnique({
       where: { MaBaiHat: songId },
       include: {
-        NgheSi: true,
+        NgheSi: {
+          select: {
+            MaNgheSi: true,
+            TenNgheSi: true,
+            AvatarUrl: true,
+          }
+        },
         NhacSi: true,
         TheLoai: true,
         TienDoNghe: {
@@ -59,7 +66,7 @@ const getSongById = async (req, res) => {
         }
       });
 
-      await prisma.nhacSi.upsert({
+      const composer = await prisma.nhacSi.upsert({
         where: { MaNhacSi: 1 },
         update: {},
         create: {
@@ -68,7 +75,7 @@ const getSongById = async (req, res) => {
         }
       });
 
-      await prisma.theLoai.upsert({
+      const genre = await prisma.theLoai.upsert({
         where: { MaTheLoai: 1 },
         update: {},
         create: {
@@ -81,9 +88,9 @@ const getSongById = async (req, res) => {
         data: {
           MaBaiHat: songId,
           TenBaiHat: song.name,
-          MaNhacSi: 1,
+          MaNhacSi: composer.MaNhacSi,
           MaNgheSi: artist.MaNgheSi,
-          MaTheLoai: 1,
+          MaTheLoai: genre.MaTheLoai,
           MaNguoiDang: "",
           BaiHatUrl: song.audio,
           DownloadUrl: song.audiodownload,
@@ -113,6 +120,8 @@ const getSongById = async (req, res) => {
         composer: songResponse.NhacSi?.TenNhacSi,
         artist: songResponse.NgheSi?.TenNgheSi,
         genre: songResponse.TheLoai?.TenTheLoai,
+        artistId: songResponse.MaNgheSi,
+        artistAvatarUrl: artist.AvatarUrl,
       });
     }
 
@@ -136,6 +145,8 @@ const getSongById = async (req, res) => {
       composer: songRecord.NhacSi?.TenNhacSi,
       artist: songRecord.NgheSi?.TenNgheSi,
       genre: songRecord.TheLoai?.TenTheLoai,
+      artistId: songRecord.MaNgheSi,
+      artistAvatarUrl: songRecord.NgheSi?.AvatarUrl,
     });
 
 
@@ -147,7 +158,8 @@ const getSongById = async (req, res) => {
 }
 
 const uploadSong = async (req, res) => {
-  const { uid, name, link, download, avatarUrl, releaseDate, lyric, composer, artist, genre } = req.body;
+  const { uid, name, link, download, avatarUrl,
+    lyric, composer, artist, genre } = req.body;
 
   var artistInfo = await prisma.ngheSi.findFirst({
     where: { TenNgheSi: artist }
@@ -191,7 +203,7 @@ const uploadSong = async (req, res) => {
         TenBaiHat: name,
         BaiHatUrl: link,
         AvatarUrl: avatarUrl,
-        NgayDang: new Date(releaseDate),
+        NgayDang: new Date(),
         LuotNghe: 0,
         LoiBaiHat: lyric,
         DownloadUrl: download,
@@ -203,20 +215,37 @@ const uploadSong = async (req, res) => {
       }
     });
 
-    res.status(201).json({
-      id: createdSong.MaBaiHat,
-      name: createdSong.TenBaiHat,
-      link: createdSong.BaiHatUrl,
-      download: createdSong.DownloadUrl,
-      avatarUrl: createdSong.AvatarUrl,
-      releaseDate: createdSong.NgayDang,
-      plays: createdSong.LuotNghe,
-      lyric: createdSong.LoiBaiHat,
-      duration: createdSong.TienDo,
-      composer: createdSong.MaNhacSi,
-      artist: createdSong.MaNgheSi,
-      genre: createdSong.MaTheLoai
-    });
+    const getSongDetail = await prisma.baiHat.findUnique({
+      where: {
+        MaBaiHat: createdSong.MaBaiHat
+      },
+      include: {
+        NgheSi: true,
+        NhacSi: true,
+        TheLoai: true,
+      }
+    })
+
+    const responseSong = {
+      id: getSongDetail.MaBaiHat,
+      name: getSongDetail.TenBaiHat,
+      link: getSongDetail.BaiHatUrl,
+      download: getSongDetail.DownloadUrl,
+      image: getSongDetail.AvatarUrl,
+      releaseDate: getSongDetail.NgayDang,
+      plays: getSongDetail.LuotNghe,
+      lyric: getSongDetail.LoiBaiHat,
+      duration: getSongDetail.TienDo,
+      composer: getSongDetail.NhacSi?.TenNhacSi,
+      artist: getSongDetail.NgheSi?.TenNgheSi,
+      genre: getSongDetail.TheLoai?.TenTheLoai
+    }
+    await addDocuments(responseSong);
+
+    res.status(201).json(
+      responseSong
+    );
+
   } catch (error) {
     res.status(500).json({
       error: error.message

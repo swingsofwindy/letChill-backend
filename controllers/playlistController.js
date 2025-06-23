@@ -38,7 +38,7 @@ const getPlaylist = async (req, res) => {
 //
 const updatePlaylist = async (req, res) => {
   const playlistId = parseInt(req.params.id, 10);
-  const uid = parseInt(req.query.uid, 10);
+  const uid = req.query.uid;
   const { name, avatarUrl } = req.body;
 
   try {
