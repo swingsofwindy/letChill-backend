@@ -1,6 +1,6 @@
 const express = require('express');
 const { getSongById, uploadSong, downloadSong, randomId, 
-        updateSongProgress, getSongProgress, updateSongListenCount } = require('../controllers/songController');
+        updateSongProgress, getSongProgress, updateSongListenCount, getSongByCreatorId } = require('../controllers/songController');
 const authorize = require('../middlewares/authorization');
 const verifyToken = require('../middlewares/verifyToken');
 
@@ -9,6 +9,8 @@ const router = express.Router();
 router.get('/random-id', randomId);
 
 router.get('/:id/:uid', getSongById);
+
+router.get('/:creatorId', getSongByCreatorId)
 
 router.post('/upload', verifyToken, authorize(['CREATOR', 'ADMIN']), uploadSong);
 

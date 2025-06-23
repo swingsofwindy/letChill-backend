@@ -359,6 +359,53 @@ const updateSongListenCount = async (req, res) => {
   }
 };
 
+const getSongByCreatorId = async (req, res) => {
+  const creatorId = req.params.creatorId;
+  try {
+    const creator = await prisma.nguoiDung.findUnique({
+      where: { MaNguoiDung: creatorId }
+    });
+    const songs = await prisma.baiHat.findMany({
+      where: { MaNguoiDang: creatorId },
+      include: {
+        NgheSi: true,
+        NhacSi: true,
+        TheLoai: true,
+      }
+    });
+
+    if (songs.length === 0) {
+      return res.status(404).json({ message: "NO_SONGS_FOUND" });
+    }
+
+    res.status(200).json(
+      {
+        creator: {
+          id: creator.MaNguoiDung,
+          name: creator.TenNguoiDung,
+          avatarUrl: creator.AvatarUrl,
+          followers: creator.SoNguoiTheoDoi || 0
+      },
+        songs: songs.map(song => ({
+          id: song.MaBaiHat,
+          name: song.TenBaiHat,
+          link: song.BaiHatUrl,
+          download: song.DownloadUrl,
+          avatarUrl: song.AvatarUrl,
+          releaseDate: song.NgayDang,
+          plays: song.LuotNghe,
+          lyric: song.LoiBaiHat,
+          duration: song.TienDo,
+          composer: song.NhacSi?.TenNhacSi || "Unknown Composer",
+          artist: song.NgheSi?.TenNgheSi || "Unknown Artist",
+          genre: song.TheLoai?.TenTheLoai || "Unknown Genre",
+        }))
+      });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+}
+
 module.exports = {
   getSongById,
   uploadSong,
@@ -366,5 +413,6 @@ module.exports = {
   randomId,
   updateSongProgress,
   getSongProgress,
-  updateSongListenCount
+  updateSongListenCount,
+  getSongByCreatorId
 };

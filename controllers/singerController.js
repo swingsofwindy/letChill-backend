@@ -228,7 +228,7 @@ const addFollowSinger = async (req, res) => {
       },
     });
     if (follow) {
-      return res.status(400).json({ error: "ALREADY_FOLLOWING" });
+      return res.status(201).json({ message: "ALREADY_FOLLOWED" });
     }
     await prisma.theoDoi.create({
       data: {
