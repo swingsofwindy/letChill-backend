@@ -157,6 +157,22 @@ const getSongById = async (req, res) => {
   }
 }
 
+const deleteSong = async (req, res) => {
+  const songId = parseInt(req.params.id, 10);
+  try {
+    await prisma.baiHat.delete({
+      where: {
+        MaBaiHat: songId,
+      }
+    })
+    res.status(200).json();
+  } catch (error) {
+    res.status(400).json({
+      error: error.message
+    })
+  }
+}
+
 const uploadSong = async (req, res) => {
   const { uid, name, link, download, avatarUrl,
     lyric, composer, artist, genre } = req.body;
@@ -391,7 +407,7 @@ const updateSongListenCount = async (req, res) => {
 const getSongByCreatorId = async (req, res) => {
   const creatorId = req.params.creatorId;
   try {
-    const creator = await prisma.nguoiDung.findUnique({
+    const creator = await prisma.User.findUnique({
       where: { MaNguoiDung: creatorId }
     });
     const songs = await prisma.baiHat.findMany({
@@ -414,7 +430,7 @@ const getSongByCreatorId = async (req, res) => {
           name: creator.TenNguoiDung,
           avatarUrl: creator.AvatarUrl,
           followers: creator.SoNguoiTheoDoi || 0
-      },
+        },
         songs: songs.map(song => ({
           id: song.MaBaiHat,
           name: song.TenBaiHat,
@@ -435,6 +451,37 @@ const getSongByCreatorId = async (req, res) => {
   }
 }
 
+const getAllSongs = async (req, res) => {
+  try {
+    const songs = await prisma.baiHat.findMany({
+      include: {
+        NgheSi: true,
+        NhacSi: true,
+        TheLoai: true,
+      }
+    });
+
+    res.status(200).json(
+      songs.map(song => ({
+        id: song.MaBaiHat,
+        name: song.TenBaiHat,
+        link: song.BaiHatUrl,
+        download: song.DownloadUrl,
+        avatarUrl: song.AvatarUrl,
+        releaseDate: song.NgayDang,
+        plays: song.LuotNghe,
+        lyric: song.LoiBaiHat,
+        duration: song.TienDo,
+        composer: song.NhacSi?.TenNhacSi || "Unknown Composer",
+        artist: song.NgheSi?.TenNgheSi || "Unknown Artist",
+        genre: song.TheLoai?.TenTheLoai || "Unknown Genre",
+      }))
+    );
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   getSongById,
   uploadSong,
@@ -443,5 +490,7 @@ module.exports = {
   updateSongProgress,
   getSongProgress,
   updateSongListenCount,
-  getSongByCreatorId
+  getSongByCreatorId,
+  getAllSongs,
+  deleteSong,
 };

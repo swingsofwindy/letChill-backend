@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const { error } = require('firebase-functions/logger');
+const { select } = require('firebase-functions/params');
 const prisma = new PrismaClient();
 
 //GET profile
@@ -17,15 +18,6 @@ const getProfile = async (req, res) => {
             AvatarUrl: true,
           }
         },
-        DangKy: {
-          select: {
-            MaDangKy: true,
-            Goi: true,
-            PhuongThuc: true,
-            NgayBatDau: true,
-            NgayKetThuc: true
-          }
-        }
       }
     });
 
@@ -34,6 +26,24 @@ const getProfile = async (req, res) => {
         error: "USER_NOT_FOUND"
       });
     }
+
+    const songs = await prisma.baiHat.findMany({
+      where: {
+        MaNguoiDang: uid,
+      },
+      select: {
+        MaBaiHat: true,
+        TenBaiHat: true,
+        NgheSi: {
+          select: {
+            MaNgheSi: true,
+            TenNgheSi: true,
+          }
+        },
+        AvatarUrl: true,
+        NgayDang: true,
+      }
+    })
 
     const playlistCount = user.DanhSachPhat.length;
     res.status(200).json({
@@ -47,12 +57,14 @@ const getProfile = async (req, res) => {
         avatarUrl: p.AvatarUrl
       })),
       playlistCount: playlistCount,
-      subscription: user.DangKy.map(s => ({
-        id: s.MaDangKy,
-        type: s.Goi,
-        method: s.PhuongThuc,
-        startDate: s.NgayBatDau,
-        endDate: s.NgayKetThuc
+
+      song: songs.map(s => ({
+        id: s.MaBaiHat,
+        name: s.TenBaiHat,
+        avatarUrl: s.AvatarUrl,
+        artistId: s.NgheSi.MaNgheSi,
+        artistName: s.NgheSi.TenNgheSi,
+        releaseDay: s.NgayDang,
       }))
     });
   } catch (error) {

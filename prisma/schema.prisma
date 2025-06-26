@@ -34,6 +34,7 @@ model User {
   TheoDoi      TheoDoi[]
   DangKy       DangKy[]
   TienDoNghe    TienDoNghe[]
+  BaoCao       BaoCao[]
 }
 
 model DanhSachPhat {
@@ -79,6 +80,7 @@ model BaiHat {
   DanhGia    DanhGia[]
   CT_DanhSachPhat CT_DanhSachPhat[]
   TienDoNghe TienDoNghe[]
+  BaoCao BaoCao[]
 }
 
 model TienDoNghe {
@@ -157,4 +159,17 @@ model DangKy {
   NgayTao DateTime @default(now())
 
   User User @relation(fields: [MaNguoiDung], references: [MaNguoiDung])
+}
+
+model BaoCao {
+  MaBaoCao Int @id @default(autoincrement())
+  MaNguoiDung String
+  MaBaiHat Int
+  LoaiBaoCao String 
+  Email String
+  LyDo String
+  NgayTao DateTime @default(now())
+
+  User          User @relation(fields: [MaNguoiDung], references: [MaNguoiDung])
+  BaiHat        BaiHat @relation(fields: [MaBaiHat], references: [MaBaiHat])
 }

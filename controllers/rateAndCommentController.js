@@ -6,7 +6,6 @@ const prisma = new PrismaClient();
 const getRate = async (req, res) => {
   try {
     const rateAndComments = await prisma.danhGia.findMany({
-
       include: {
         User: {
           select: {
@@ -27,6 +26,7 @@ const getRate = async (req, res) => {
         },
         rate: item.MucDanhGia,
         comment: item.BinhLuan,
+        releaseDay: item.NgayDang
       })),
       rateAndCommentsCount: rateAndComments.length
     });
@@ -35,7 +35,7 @@ const getRate = async (req, res) => {
       error: error.message
     });
   }
-}
+};
 
 const getRateBySongId = async (req, res) => {
   const songId = parseInt(req.query.songId, 10);

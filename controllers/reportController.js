@@ -1,4 +1,6 @@
 const transporter = require("../utils/mailer");
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 const sendReportEmail = async (req, res) => {
   const { email, content } = req.body;
@@ -63,6 +65,61 @@ const sendReportEmail = async (req, res) => {
   }
 };
 
+const createReportSong = async (req, res) => {
+  const songId = parseInt(req.params.id, 10);
+  const uid = req.params.uid;
+  const { email, reason, type } = req.body;
+
+  try {
+    await prisma.baoCao.create({
+      data: {
+        Email: email,
+        LyDo: reason,
+        LoaiBaoCao: type,
+        MaBaiHat: songId,
+        MaNguoiDung: uid,
+      }
+    })
+
+    res.status(200).json();
+
+  } catch (error) {
+    res.status(400).json({
+      error: error.message
+    });
+  }
+}
+
+const getAllReport = async (req, res) => {
+  try {
+    const reports = await prisma.baoCao.findMany();
+    res.status(200).json(reports);
+  } catch (error) {
+    res.status(400).json({
+      error: error.message
+    });
+  }
+}
+
+const deleteReport = async (req, res) => {
+  const reportId = parseInt(req.params.id, 10);
+  try {
+    await prisma.baoCao.delete({
+      where: {
+        MaBaoCao: reportId
+      }
+    })
+    res.status(200).json();
+  } catch (error) {
+    res.status(400).json({
+      error: error.message
+    })
+  }
+}
+
 module.exports = {
   sendReportEmail,
+  createReportSong,
+  getAllReport,
+  deleteReport
 };

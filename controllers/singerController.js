@@ -57,31 +57,37 @@ const getAllSingers = async (req, res) => {
   try {
     const singers = await prisma.ngheSi.findMany();
 
-    // Nếu muốn trả về số followers cho từng nghệ sĩ:
-    // const singersWithFollowers = await Promise.all(
-    //   singers.map(async (singer) => {
-    //     const followers = await prisma.theoDoi.count({
-    //       where: { MaNgheSi: singer.MaNgheSi }
-    //     });
-    //     return {
-    //       id: singer.MaNgheSi,
-    //       name: singer.TenNgheSi,
-    //       avatarUrl: singer.AvatarUrl,
-    //       followers
-    //     };
-    //   })
-    // );
-    // return res.status(200).json(singersWithFollowers);
+    const singersWithStats = await Promise.all(
+      singers.map(async (singer) => {
+        // Đếm số lượng bài hát của ca sĩ này
+        const songCount = await prisma.baiHat.count({
+          where: { MaNgheSi: singer.MaNgheSi }
+        });
+        // Đếm số lượng người theo dõi ca sĩ này
+        const followers = await prisma.theoDoi.count({
+          where: { MaNgheSi: singer.MaNgheSi }
+        });
+        return {
+          id: singer.MaNgheSi,
+          name: singer.TenNgheSi,
+          avatarUrl: singer.AvatarUrl,
+          songCount,
+          followers
+        };
+      })
+    );
+    return res.status(200).json(singersWithStats);
 
     // Nếu chỉ trả về thông tin cơ bản:
-    const result = singers.map(singer => ({
-      id: singer.MaNgheSi,
-      name: singer.TenNgheSi,
-      avatarUrl: singer.AvatarUrl,
-      songCount: singer.baiHat.length,
-    }));
+    // const result = singers.map(singer => ({
+    //   id: singer.MaNgheSi,
+    //   name: singer.TenNgheSi,
+    //   avatarUrl: singer.AvatarUrl,
+    //   songCount: singer.baiHat.length,
+    //   followersCount: singer.followers.length,
+    // }));
 
-    res.status(200).json(result);
+    // res.status(200).json(result);
   } catch (error) {
     res.status(400).json({
       error: error.message
@@ -256,6 +262,28 @@ const deleteSinger = async (req, res) => {
   }
 }
 
+// Kiểm tra đã follow chưa (GET /singer/:id/follows/:uid)
+const checkFollowSinger = async (req, res) => {
+  const singerId = parseInt(req.params.id, 10);
+  const uid = req.params.uid;
+  try {
+    const follow = await prisma.theoDoi.findUnique({
+      where: {
+        MaNgheSi_MaNguoiDung: {
+          MaNguoiDung: uid,
+          MaNgheSi: singerId,
+        },
+      },
+    });
+    if (follow) {
+      return res.status(200).json({ message: "ALREADY_FOLLOWED", isFollowing: true });
+    }
+    return res.status(200).json({ message: "NOT_FOLLOWED", isFollowing: false });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
 // POST /follows
 const addFollowSinger = async (req, res) => {
   const uid = req.params.uid;
@@ -304,6 +332,36 @@ const removeFollowSinger = async (req, res) => {
   }
 };
 
+// GET /singer/followed/:uid
+const getFollowedSingersByUser = async (req, res) => {
+  const uid = req.params.uid;
+  try {
+    const follows = await prisma.theoDoi.findMany({
+      where: { MaNguoiDung: uid },
+      select: { MaNgheSi: true }
+    });
+    const singerIds = follows.map(f => f.MaNgheSi);
+    const singers = await prisma.ngheSi.findMany({
+      where: { MaNgheSi: { in: singerIds } }
+    });
+    const singersWithFollowers = await Promise.all(
+      singers.map(async (singer) => {
+        const followers = await prisma.theoDoi.count({
+          where: { MaNgheSi: singer.MaNgheSi }
+        });
+        return {
+          id: singer.MaNgheSi,
+          name: singer.TenNgheSi,
+          avatarUrl: singer.AvatarUrl,
+          followers
+        };
+      })
+    );
+    res.status(200).json(singersWithFollowers);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
 
 module.exports = {
   getSinger,
@@ -314,4 +372,6 @@ module.exports = {
   addFollowSinger,
   removeFollowSinger,
   getAllSingers,
+  checkFollowSinger,
+  getFollowedSingersByUser,
 };
